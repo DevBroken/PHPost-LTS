@@ -1,53 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Archivo de Inicialización del Sistema
- *
- * Carga las clases base y ejecuta la solicitud.
- *
- * @name    header.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
 
-/*
- * -------------------------------------------------------------------
- *  Estableciendo variables importantes
- * -------------------------------------------------------------------
- */
+defined('TS_HEADER') OR define('TS_HEADER', TRUE);
 
-   if( defined('TS_HEADER') ) return;
-
-   // Sesión
-   if(!isset($_SESSION)) session_start();
-
-   // Reporte de errores
-   error_reporting(E_ALL ^ E_WARNING ^ E_NOTICE);
-   ini_set('display_errors', TRUE);
-
-   // Límite de ejecución
-   set_time_limit(300);
-
-   // Variable $page
-   if( !isset($page) ) $page = '';
-
-/*
- * -------------------------------------------------------------------
- *  Definiendo constantes
- * -------------------------------------------------------------------
- */
-   //DEFINICION DE CONSTANTES
-   define('TS_ROOT', realpath(dirname(__FILE__)));
-
-   define('TS_HEADER', TRUE);
-
-   define('TS_CLASS', 'inc/class/');
-
-   define('TS_EXTRA', TS_ROOT.'/inc/ext/');
-
-   define('TS_SMARTY', TS_ROOT.'/inc/smarty/');
-
-   define('TS_FILES', TS_ROOT.'/files/');
-   
-   set_include_path(get_include_path() . PATH_SEPARATOR . realpath('./'));
+require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/inc/libs/autoload.php';
 
 /*
  * -------------------------------------------------------------------
@@ -55,102 +18,105 @@
  * -------------------------------------------------------------------
  */
 
-   // Funciones
-   include TS_EXTRA.'functions.php';
+require_once TS_EXTRA . '/functions.php';
 
-   // Nucleo
-   include TS_CLASS.'c.core.php';
-   
-   // Controlador de usuarios
-   include TS_CLASS.'c.user.php';
+// Constantes
+require_once TS_UTILS . '/Misc/Constants.php';
+// Utilidades centrales por dominio
+// De momento estaran aquÃ­, luego lo moverÃ©
+require_once TS_UTILS . '/Http/Http.php';
+require_once TS_UTILS . '/Http/HttpClient.php';
+require_once TS_UTILS . '/Http/Response.php';
+require_once TS_UTILS . '/Logger/Logger.php';
+require_once TS_UTILS . '/Misc/Container.php';
+require_once TS_UTILS . '/Paginator/Paginador.php';
+require_once TS_UTILS . '/Password/Password.php';
+require_once TS_UTILS . '/Request/Request.php';
+require_once TS_UTILS . '/Seguridad/IP.php';
+require_once TS_UTILS . '/Seguridad/Security.php';
 
-   // Monitor de usuario
-   include TS_CLASS.'c.monitor.php';
-   
-   // Actividad de usuario
-   include TS_CLASS.'c.actividad.php';
-
-   // Mensajes de usuario
-   include TS_CLASS.'c.mensajes.php';
-   
-   // Crean requests
-   include TS_EXTRA.'QueryString.php';
+// Nucleo
+require_once TS_CLASS . '/c.core.php';
+require_once TS_CLASS . '/c.user.php';
+require_once TS_CLASS . '/c.monitor.php';
+require_once TS_CLASS . '/c.actividad.php';
+require_once TS_CLASS . '/c.mensajes.php';
+require_once TS_CLASS . '/c.smarty.php';
+require_once TS_CLASS . '/c.visitas.php';
 
 /*
  * -------------------------------------------------------------------
  *  Inicializamos los objetos principales
  * -------------------------------------------------------------------
  */
- 
-   // Limpiar variables...
-   cleanRequest();
 
-   // Cargamos el nucleo
-   $tsCore = new tsCore();
-   
-   // Usuario
-   $tsUser = new tsUser();
+cleanRequest();
+$container = new Container;
 
-   // Monitor
-   $tsMonitor = new tsMonitor();
+$Logger = $container->get(Logger::class);
+set_error_handler([$Logger, 'handlePhpError'], E_USER_DEPRECATED);
 
-   // Actividad
-   $tsActividad = new tsActividad();
+$tsCore        = $container->get(tsCore::class);
+$tsUser        = $container->get(tsUser::class);
+$tsMonitor 	   = $container->get(tsMonitor::class);
+$tsActividad   = $container->get(tsActividad::class);
+$tsMP          = $container->get(tsMensajes::class);
+$tsVisitas     = $container->get(tsVisitas::class);
+$smarty        = $container->get(tsSmarty::class);
 
-   // Mensajes
-   $tsMP = new tsMensajes();
-
-   // Definimos el template a utilizar
-   $tsTema = $tsCore->settings['tema']['t_path'];
-   if(empty($tsTema)) $tsTema = 'default';
-   define('TS_TEMA', $tsTema);
-
-   # Configuraciones adicionales para smarty
-   define('TS_THEMES', TS_ROOT . '/themes/'); # Todos los temas
-   define('TS_PLUGINS', TS_FILES . 'plugins/'); # Todos los plugins
-   # Tiempo de vida del cache antes de ser eliminado [5hs] (3600 equivale 1hs)
-   define('CACHE_LIFE_TIME', 3600 * 5);
-   define('CACHE_CHECKED', TRUE);
-   # Solo usar las carpetas agregadas en $smarty->setTemplateDir()
-   define('SECURITY', TRUE);
-   # Para comprimir el html y que sea más rápido
-   define('COMPRESS_HTML', FALSE);
-   # Smarty 4.0
-   require_once TS_EXTRA . 'smarty.config.php';
+// Definimos el template a utilizar
+define('TS_TEMA', $tsCore->settings['tema']['t_path'] ?? 'default');
 
 /*
  * -------------------------------------------------------------------
- *  Asignación de variables
+ *  Asignacion de variables
  * -------------------------------------------------------------------
 */
 // Configuraciones
 $smarty->assign('tsConfig', $tsCore->settings);
-
-// Obtejo usuario
+$smarty->assign('tsAllows', $tsCore->allows);
+$smarty->assign('tsRoutes', $tsCore->getRoutes());
+$smarty->assign('tsCategorias', $tsCore->getCategorias());
 $smarty->assign('tsUser', $tsUser);
-
-// Avisos
 $smarty->assign('tsAvisos', $tsMonitor->avisos);
-
-// Nofiticaciones
 $smarty->assign('tsNots', $tsMonitor->notificaciones);
-
-// Mensajes
 $smarty->assign('tsMPs', $tsMP->mensajes);
-      
+
 /**
  * Si hay alguna IP bloqueada por el Moderador/Administrador,
- * ejecutamos esta función, en caso contrario no hará nada
+ * ejecutamos esta funcion, en caso contrario no hara nada
 */
-ip_banned();
+if($tsUser->isUserIPBlocked()) die('Tu IP fue bloqueada por el administrador/moderador.');
 
 /**
  * Si hay un usuario baneado por el Moderador/Administrador,
- * ejecutamos esta función, en caso contrario no hará nada
+ * ejecutamos esta funcion, en caso contrario no hara nada
 */
-user_banned();
+$banned_data = $tsUser->getUserBanned();
+if(!empty($banned_data)) {
+   if(empty($_GET['action'])){
+      $smarty->assign([
+         'tsTitle' => "Usuario baneado - {$tsCore->settings['titulo']}",
+         'tsBanned' => $banned_data
+      ]);
+      $smarty->loadFilter('output', 'trimwhitespace');
+      $smarty->display('suspension.tpl');
+
+   } else die('<div class="emptyError">Usuario suspendido</div>');
+   //
+   exit;
+}
 
 /**
- * Si la página esta en modo mantenimiento, ejecutamos la función
+ * Si la pagina esta en modo mantenimiento, ejecutamos la funcion
 */
-site_in_maintenance();
+if($tsCore->settings['offline'] === 1 && ($tsUser->is_admod !== 1 && $tsUser->permisos['govwm'] === false) && $_GET['action'] !== 'login-user'){
+   $smarty->assign('tsTitle', "Sitio en mantenimiento - {$tsCore->settings['titulo']}");
+   $smarty->assign('tsLogin', (isset($_GET["login"]) and $_GET["login"] == 'admin' ? true : false));
+
+   if(empty($_GET["action"])) {
+      $smarty->loadFilter('output', 'trimwhitespace');
+      $smarty->display('mantenimiento.tpl');
+   } else die('Espera un poco...');
+   exit();
+}

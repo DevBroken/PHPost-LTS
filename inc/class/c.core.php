@@ -1,546 +1,517 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
 /**
- * Funciones globales
- *
- * @name    c.core.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
+
+require_once TS_SOURCES . '/extensions/plugins/modifier.seo.php';
+require_once TS_EXTRA . '/bbcode.inc.php';
+
 class tsCore {
-    
-	var $settings;		// CONFIGURACIONES DEL SITIO
-	var $querys = 0;	// CONSULTAS
-	
 
-	function __construct() {
-		// CARGANDO CONFIGURACIONES
+	protected Logger $Logger;
+	protected IP $IP;
+	public array $settings = [];
+	public array $register = [];
+	public array $allows = [];
+
+	public function __construct(Logger $Logger, IP $IP) {
+		$this->Logger = $Logger;
+		$this->IP = $IP;
+		// La única configuraciones que importan
 		$this->settings = $this->getSettings();
-		$this->settings['domain'] = str_replace(getSSL(), '', $this->settings['url']);
-		$this->settings['categorias'] = $this->getCategorias();
-      $this->settings['default'] = $this->settings['url'].'/themes/default';
-		$this->settings['tema'] = $this->getTema();
-		#
-		$this->settings['images'] = $this->settings['tema']['t_url'].'/images';
-      $this->settings['css'] = $this->settings['tema']['t_url'].'/css';
-		$this->settings['js'] = $this->settings['tema']['t_url'].'/js';
-		#
-		$this->settings['avatar'] = $this->settings['url'].'/files/avatar';
-		$this->settings['smiles'] = $this->settings['url'].'/files/images/smiles';
-		$this->settings['flags'] = $this->settings['url'].'/files/images/flags';
-		$this->settings['med'] = $this->settings['url'].'/files/images/med';
-		$this->settings['ran'] = $this->settings['url'].'/files/images/ran';
-		$this->settings['cat'] = $this->settings['url'].'/files/images/cat';
-      //
-      if($_GET['do'] == 'portal' || $_GET['do'] == 'posts') $this->settings['news'] = $this->getNews();
-		# Mensaje del instalador y pendientes de moderación #
-		$this->settings['install'] = $this->existinstall();
-		$this->settings['novemods'] = $this->getNovemods();
-	}
-	
-	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	
-	/*
-		getSettings() :: CARGA DESDE LA DB LAS CONFIGURACIONES DEL SITIO
-	*/
-	function getSettings() {
-		$query = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM w_configuracion'));
-		$query["providers"] = join(', ', json_decode($query["providers"], true));
-		return $query;
-	}
-	
-	function getNovemods() {
-      $datos = db_exec('fetch_assoc', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT 
-      	(SELECT count(post_id) FROM p_posts WHERE post_status = \'3\') as revposts, 
-      	(SELECT count(cid) FROM p_comentarios WHERE c_status = \'1\' ) as revcomentarios, 
-      	(SELECT count(DISTINCT obj_id) FROM w_denuncias WHERE d_type = \'1\') as repposts, 
-      	(SELECT count(DISTINCT obj_id) FROM w_denuncias WHERE d_type = \'2\') as repmps, 
-      	(SELECT count(DISTINCT obj_id) FROM w_denuncias WHERE d_type = \'3\') as repusers, 
-      	(SELECT count(DISTINCT obj_id) FROM w_denuncias  WHERE d_type = \'4\') as repfotos, 
-      	(SELECT count(susp_id) FROM u_suspension) as suspusers, 
-      	(SELECT count(post_id) FROM p_posts WHERE post_status = \'2\') as pospelera, 
-      	(SELECT count(foto_id) FROM f_fotos WHERE f_status = \'2\') as fospelera'));
-		$datos['total'] = $datos['repposts'] + $datos['repfotos'] + $datos['repmps'] + $datos['repusers'] + $datos['revposts'] + $datos['revcomentarios'];
-		return $datos;  
-	}
-	/*
-		getCategorias()
-	*/
-	function getCategorias() {
-		return result_array(db_exec(array(__FILE__, __LINE__), 'query', 'SELECT cid, c_orden, c_nombre, c_seo, c_img FROM p_categorias ORDER BY c_orden'));
+		$this->register = $this->setRegister();
+		$this->allows 	= $this->setAllows();
 	}
 
-	/*
-		getTema()
-	*/
-	function getTema() {
-		$data = db_exec('fetch_assoc', db_exec(array(__FILE__, __LINE__), 'query', "SELECT * FROM w_temas WHERE tid = {$this->settings['tema_id']} LIMIT 1"));
-      $data['t_url'] = $this->settings['url'] . '/themes/' . $data['t_path'];
-		return $data;
+	/**
+	 * @access public
+	 * @param string $type
+	 * @return string
+	 */
+	public function ip(string $type = 'execute'): string {
+		$match = match($type) {
+			'binary', 'ip_binary'	=> $this->IP->getIPBinary(),
+			'human', 'ip_human' 	=> $this->IP->getIPHuman(),
+			default					=> $this->IP->executeIP()
+		};
+		return $match;
 	}
-	/*
-      getNews()
-  	*/
-   function getNews() {
-      //
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT not_body FROM w_noticias WHERE not_active = 1 ORDER by RAND()');
-		while($row = db_exec('fetch_assoc', $query)){
-		  	$row['not_body'] = $this->parseBBCode($row['not_body'],'news');
-         $data[] = $row;
+
+	/**
+	 * @access public
+	 * @param string $path
+	 * @return string
+	 */
+	public function createRoute(string $path = ''): string {
+		return $this->settings['url'] . $path;
+	}
+
+	/**
+	 * @access public
+	 * @param string $path
+	 * @return string|array
+	 */
+	public function getRoutes(string $path = ''): string|array {
+		$media = $this->settings['url'] . '/media';
+		$tema 	= "{$media}/{$this->getTema('t_path')}";
+		$assets = "{$media}/assets";
+		// Creamos las rutas
+		$routes = [];
+		$routes['domain'] = $this->getDomain();
+		foreach(['tema','assets'] as $directory) {
+			foreach(['base','css','fonts','images','js'] as $subdirectory) {
+				$routes[$directory][$subdirectory] = ($subdirectory === 'base') ? $$directory : "{$$directory}/{$subdirectory}";
+			}
 		}
-      //
-      return $data;
-   }
-	//COMPROBACIONES DE LA EXISTENCIA DEL INSTALADOR O ACTUALIZADOR
-	function existinstall()  {
-		$install_dir = TS_ROOT . '/install/';
-		$upgrade_dir = TS_ROOT . '/upgrade/';
-		if(is_dir($install_dir)) return '<div id="msg_install">Por favor, elimine la carpeta <b>install</b></div>';		
-		if(is_dir($upgrade_dir)) return '<div id="msg_install">Por favor, elimine la carpeta <b>upgrade</b></div>';
+		//
+		if(!empty($path)) {
+			$parts = explode(':', $path);
+			if(count($parts) === 1) {
+				return $routes[$parts[0]];
+			} else if(count($parts) > 1) {
+				return $routes[$parts[0]][$parts[1]];
+			}
+		}
+		return $routes;
 	}
-   
-   // FUNCIÓN CONCRETA PARA CENSURAR
-	function parseBadWords($c, $s = FALSE) {
-      $q = result_array(db_exec(array(__FILE__, __LINE__), 'query', 'SELECT word, swop, method, type FROM w_badwords '.($s == true ? '' : ' WHERE type = \'0\'')));
-      foreach($q AS $badword) {
-      	$c = str_ireplace((empty($badword['method']) ? $badword['word'] : $badword['word'].' '),($badword['type'] == 1 ? '<img title="'.$badword['word'].'" src="'.$badword['swop'].'" />' : $badword['swop'].' '),$c);
-      }
-      return $c;
-	}        
-	
-	/*
-		setLevel($tsLevel) :: ESTABLECE EL NIVEL DE LA PAGINA | MIEMBROS o VISITANTES
+
+	/**
+	 * @access public
+	 * @return array
+	 */
+	public function getSettings(): array {
+		$query = db_exec([__FILE__, __LINE__], 'query', "SELECT titulo, slogan, url, email, tema, c_last_active, c_count_guests, c_fotos_private, c_hits_guest, c_keep_points, c_max_posts, c_max_com, c_max_nots, c_max_acts, c_newr_type, c_see_mod, c_stats_cache, c_desapprove_post, offline, offline_message, version, version_code FROM w_configuracion WHERE tscript_id = :id LIMIT 1", ['id' => 1]);
+		return is_array($query) ? $query : [];
+	}
+
+	/**
+	 * @access public
+	 * @return array
+	 */
+	public function setAllows(): array {
+		$allows = db_exec([__FILE__, __LINE__], 'query', "SELECT c_allow_sess_ip, c_allow_points, c_allow_sump, c_allow_firma, c_allow_upload, c_allow_portal, c_allow_live FROM w_configuracion WHERE tscript_id = :id LIMIT 1", ['id' => 1]);
+		return is_array($allows) ? $allows : [];
+	}
+
+	/**
+	 * @access public
+	 * @return array
+	 */
+	public function setRegister(): array {
+		$register = db_exec([__FILE__, __LINE__], 'query', "SELECT c_reg_active, c_reg_activate, c_reg_rango, c_met_welcome, c_message_welcome, c_allow_edad, pkey, skey FROM w_configuracion WHERE tscript_id = :id LIMIT 1", ['id' => 1]);
+		return is_array($register) ? $register : [];
+	}
+
+	/**
+	 * @access public
+	 * @return array
+	 */
+	public function getNovemods(): array {
+		$sql = "SELECT
+			SUM(CASE WHEN p.post_status = 3 THEN 1 ELSE 0 END) as revposts,
+			SUM(CASE WHEN p.post_status = 2 THEN 1 ELSE 0 END) as pospelera,
+			(SELECT COUNT(cid) FROM p_comentarios WHERE c_status = 0) as revcomentarios,
+			SUM(CASE WHEN d.d_type = 1 THEN 1 ELSE 0 END) as repposts,
+			SUM(CASE WHEN d.d_type = 2 THEN 1 ELSE 0 END) as repmps,
+			SUM(CASE WHEN d.d_type = 3 THEN 1 ELSE 0 END) as repusers,
+			SUM(CASE WHEN d.d_type = 4 THEN 1 ELSE 0 END) as repfotos,
+			(SELECT COUNT(susp_id) FROM u_suspension) as suspusers,
+			(SELECT COUNT(foto_id) FROM f_fotos WHERE f_status = 2) as fospelera
+			FROM (SELECT 1) __init
+			LEFT JOIN p_posts p ON 1=1
+			LEFT JOIN (SELECT DISTINCT obj_id, d_type FROM w_denuncias) d ON 1=1
+			GROUP BY __init.1";
+
+		$datos = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', $sql));
+		// Asegurar que si la base de datos devuelve nulos o falla, no rompa la suma aritmética
+		$datos = array_map('intval', $datos ?: []);
+		$claves = array_flip([
+			'repposts', 'repfotos', 'repmps', 'repusers', 'revposts', 'revcomentarios'
+		]);
+		// Filtramos el arreglo y sumamos de golpe de forma elegante
+		$datos['total'] = array_sum(array_intersect_key($datos, $claves));
+		//
+		return $datos;
+	}
+
+	/**
+	 * @access public
+	 * @return array
+	 */
+	public function getCategorias(): array {
+		return result_array(db_exec([__FILE__, __LINE__], 'query', 'SELECT cid, c_orden, c_nombre, c_seo, c_img FROM p_categorias ORDER BY c_orden'));
+	}
+
+	/**
+	 * @access public
+	 * @param string $key
+	 * @return array|string
+	 */
+	public function getTema(string $key = ''): array|string {
+		$data = db_exec([__FILE__, __LINE__], 'query', "SELECT t_name, t_path, t_copy FROM w_temas WHERE t_path = :tema LIMIT 1", [
+			'tema' => $this->settings['tema'] ?: 'default'
+		]);
+		return empty($key) ? $data : $data[$key];
+	}
+
+	/**
+	 * @access public
+	 * @return array
+	 */
+   	public function getNews() {
+	  	$data = [];
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT not_body, not_color FROM w_noticias WHERE not_active = :active ORDER by RAND()', ['active' => 1]);
+		while($row = db_exec('fetch_assoc', $query)) {
+			$row['not_body'] = $this->setBBCode($row['not_body'], 'news');
+		 	$data[] = $row;
+		}
+	  	//
+	  	return $data;
+   	}
+
+	/**
+	 * @access public
+	 * @return string
+	 */
+	public function existinstall(): string  {
+		$dirs = ['/install', '/upgrade'];
+		foreach($dirs as $dir) {
+			if(is_dir( TS_ROOT . $dir )) {
+				return "<div id=\"msg_{$dir}\">Por favor, elimine el directorio <strong>{$dir}</strong>";
+			}
+		}
+		return '';
+	}
+
+   	/**
+	 * @access public
+	 * @param string $badWords
+	 * @param bool $all
+	 * @return string
+	 */
+	public function parseBadWords(string $badWords = '', bool $all = false): string {
+		$isWhere = $all ? '' : "WHERE type = :type";
+		$params = $all ? [] : ['type' => 0];
+		$query = db_exec([__FILE__, __LINE__], 'fetch_all', "SELECT word, swop, method, type FROM w_badwords {$isWhere}", $params);
+		// Recorremos las censuras
+		foreach($query AS $badword) {
+			// Desestructuramos
+			['word' => $word, 'swop' => $swop, 'method' => $method, 'type' => $type] = $badword;
+			$find = empty($method) ? $word : "{$word} ";
+			$replace = ((int)$type === 1) ? "<img title=\"{$word}\" src=\"{$swop}\" />" : "{$swop} ";
+			$badWords = str_ireplace($find, $replace, $badWords);
+		}
+		return $badWords;
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar tsUser->setLevel() en su lugar.
 	*/
-	function setLevel($tsLevel, $msg = false){
+	public function setLevel(int|string $tsLevel, bool $msg = false) {
 		global $tsUser;
-		
-		// CUALQUIERA
-		if($tsLevel == 0) return true;
-		// SOLO VISITANTES
-		elseif($tsLevel == 1) {
-			if($tsUser->is_member == 0) return true;
-			else {
-				if($msg) $mensaje = 'Esta pagina solo es vista por los visitantes.';
-				else $this->redirectTo('/');
-			}
-		// SOLO MIEMBROS
-		} elseif($tsLevel == 2){
-			if($tsUser->is_member == 1) return true;
-			else {
-				if($msg) $mensaje = 'Para poder ver esta pagina debes iniciar sesi&oacute;n.';
-				else $this->redirectTo('/login/?r='.$this->currentUrl());
-			}
-		// SOLO MODERADORES
-		} elseif($tsLevel == 3){
-			if($tsUser->is_admod || $tsUser->permisos['moacp']) return true;
-			else {
-				if($msg) $mensaje = 'Estas en un area restringida solo para moderadores.';
-				else $this->redirectTo('/login/?r='.$this->currentUrl());
-			}
-		// SOLO ADMIN
-		} elseif($tsLevel == 4) {
-			if($tsUser->is_admod == 1) return true;
-			else {
-				if($msg) $mensaje = 'Estas intentando algo no permitido.';
-				else $this->redirectTo('/login/?r='.$this->currentUrl());
-			}
+		$this->Logger->deprecated('tsCore->setLevel','tsUser->setLevel');
+		// Por si viene con entero, obtendremos el string de ese valor
+		if(is_numeric($tsLevel)) {
+			$niveles = [0 => 'todos', 1 => 'visitante', 2 => 'miembro', 3 => 'moderador', 4 => 'administrador'];
+			$tsLevel = $niveles[(int)$tsLevel];
 		}
-		//
-		return array('titulo' => 'Error', 'mensaje' => $mensaje);
+		return $tsUser->setLevel($tsLevel, $msg);
 	}
 
-	/*
-		redirect($tsDir)
-	*/
-	function redirectTo($tsDir){
-		header("Location: " . urldecode($tsDir));
-		exit();
+	/**
+	 * @access public
+	 * @param string $tsDir
+	 * @return void
+	 */
+	public function redirectTo(string $tsDir = '/'): void {
+	    // Si es '/' o está vacío, redirigimos a la URL base de los settings
+	    if ($tsDir === '/' || trim($tsDir) === '') {
+	        $url = $this->settings['url'] ?? '/';
+	    } else {
+	        // Decodificamos y limpiamos espacios o saltos de línea maliciosos
+	        $url = trim(urldecode($tsDir));
+	    }
+	    // Enviamos la cabecera de redirección
+	    header("Location: " . $url);
+	    exit();
 	}
 
-	# Obtenemos el dominio
-   function getDomain(){
-      $domain = explode('/', str_replace(getSSL(), '', $this->settings['url']));
-      $domain = (is_array($domain)) ? explode('.',$domain[0]) : explode('.',$domain);
-      //
-      $t = count($domain);
-      $domain = $domain[$t - 2].'.'.$domain[$t - 1];
-      //
-      return $domain;
-   }
-	# Obtenemos url codificada
-	function currentUrl(){
-		return urlencode(getSSL() . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
-	}
 	/**
-	 * setJSON($tsContent)
-	 * Evitaremos que json_decode nos devuelva un objeto, 
-	 * con TRUE nos devolverá un array(arreglo)
-	 * @link https://www.php.net/manual/es/function.json-decode.php
-	*/
-	function setJSON(string $data = '', string $type = 'encode', bool $force = false){
-      return ($type == 'encode') ? json_encode($data) : ($force ? json_decode($data, true) : json_decode($data));
+	 * Obtiene el dominio principal del sitio (SLD + TLD) limpiando subdominios.
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function getDomain(): string {
+	    // Extraemos solo el host (ej. "://misitio.com" o "localhost")
+	    $host = parse_url($this->settings['url'] ?? '', PHP_URL_HOST);
+	    if (!$host) {
+	        return '';
+	    }
+	    // Lo picamos por sus puntos
+	    $parts = explode('.', $host);
+	    $count = count($parts);
+	    // Si no tiene puntos (ej. "localhost"), devolvemos el host tal cual
+	    if ($count < 2) {
+	        return $host;
+	    }
+	    // Soporte para extensiones dobles comunes (com.mx, co.uk, net.pe, org.es, etc.)
+	    $doubleTlds = ['com', 'net', 'org', 'co', 'gob', 'edu', 'mil'];
+	    if ($count > 2 && in_array($parts[$count - 2], $doubleTlds)) {
+	        return $parts[$count - 3] . '.' . $parts[$count - 2] . '.' . $parts[$count - 1];
+	    }
+	    // Caso estándar: devuelve "dominio.com" ignorando subdominios superiores
+	    return $parts[$count - 2] . '.' . $parts[$count - 1];
 	}
-	/*
-		setPagesLimit($tsPages, $start = false)
-	*/
-	function setPageLimit($tsLimit, $start = false, $tsMax = 0){
-		if($start == false)
-		$tsStart = empty($_GET['page']) ? 0 : (int) (($_GET['page'] - 1) * $tsLimit);
-		else {
-    		$tsStart = (int) $_GET['s'];
-         $continue = $this->setMaximos($tsLimit, $tsMax);
-         if($continue == true) $tsStart = 0;
-      }
-		//
-		return $tsStart.','.$tsLimit;
-	}
-   /*
-      setMaximos() :: MAXIMOS EN LAS PAGINAS
-   */
-   function setMaximos($tsLimit, $tsMax){
-       // MAXIMOS || PARA NO EXEDER EL NUMERO DE PAGINAS
-       $ban1 = ($_GET['page'] * $tsLimit);
-       if($tsMax < $ban1){
-           $ban2 = $ban1 - $tsLimit;
-           if($tsMax < $ban2) return true;
-       } 
-       //
-       return false;
-   }
-	/*
-		getPages($tsTotal, $tsLimit)
-		: PAGINACION
-	*/
-	function getPages($tsTotal, $tsLimit){
-		//
-		$tsPages = ceil($tsTotal / $tsLimit);
-		// PAGINA
-		$tsPage = empty($_GET['page']) ? 1 : $_GET['page'];
-		// ARRAY
-		$pages['current'] = $tsPage;
-		$pages['pages'] = $tsPages;
-		$pages['section'] = $tsPages + 1;
-		$pages['prev'] = $tsPage - 1;
-		$pages['next'] = $tsPage + 1;
-        $pages['max'] = $this->setMaximos($tsLimit, $tsTotal);
-		// RETORNAMOS HTML
-		return $pages;
-	}
-    /*
-        getPagination($total, $per_page)
-    */
-    function getPagination($total, $per_page = 10){
-        // PAGINA ACTUAL
-        $page = empty($_GET['page']) ? 1 : (int) $_GET['page'];
-        // NUMERO DE PAGINAS
-        $num_pages = ceil($total / $per_page);
-        // ANTERIOR
-        $prev = $page - 1;
-        $pages['prev'] = ($page > 0) ? $prev : 0;
-        // SIGUIENTE 
-        $next = $page + 1;
-        $pages['next'] = ($next <= $num_pages) ? $next : 0;
-        // LIMITE DB
-        $pages['limit'] = (($page - 1) * $per_page).','.$per_page; 
-        // TOTAL
-        $pages['total'] = $total;
-        //
-        return $pages;
-    }
-    /**/
-	// Constructs a page list.
-	// $pageindex = constructPageIndex($scripturl . '?board=' . $board, $_REQUEST['start'], $num_messages, $maxindex, true);
-	function pageIndex($base_url, &$start, $max_value, $num_per_page, $flexible_start = false){
-        // QUITAR EL S de la base_url
-        $base_url = explode('&s=',$base_url);
-        $base_url = $base_url[0];
-		// Save whether $start was less than 0 or not.
-		$start_invalid = $start < 0;
-	
-		// Make sure $start is a proper variable - not less than 0.
-		if ($start_invalid)
-			$start = 0;
-		// Not greater than the upper bound.
-		elseif ($start >= $max_value)
-			$start = max(0, (int) $max_value - (((int) $max_value % (int) $num_per_page) == 0 ? $num_per_page : ((int) $max_value % (int) $num_per_page)));
-		// And it has to be a multiple of $num_per_page!
-		else
-			$start = max(0, (int) $start - ((int) $start % (int) $num_per_page));
-	
-		$base_link = '<a class="navPages" href="' . ($flexible_start ? $base_url : strtr($base_url, array('%' => '%%')) . '&s=%d') . '">%s</a> ';
-	
-			// If they didn't enter an odd value, pretend they did.
-			$PageContiguous = (int) (5 - (5 % 2)) / 2;
-	
-			// Show the first page. (>1< ... 6 7 [8] 9 10 ... 15)
-			if ($start > $num_per_page * $PageContiguous)
-				$pageindex = sprintf($base_link, 0, '1');
-			else
-				$pageindex = '';
-	
-			// Show the ... after the first page.  (1 >...< 6 7 [8] 9 10 ... 15)
-			if ($start > $num_per_page * ($PageContiguous + 1))
-				$pageindex .= '<b> ... </b>';
-	
-			// Show the pages before the current one. (1 ... >6 7< [8] 9 10 ... 15)
-			for ($nCont = $PageContiguous; $nCont >= 1; $nCont--)
-				if ($start >= $num_per_page * $nCont)
-				{
-					$tmpStart = $start - $num_per_page * $nCont;
-					$pageindex.= sprintf($base_link, $tmpStart, $tmpStart / $num_per_page + 1);
-				}
-	
-			// Show the current page. (1 ... 6 7 >[8]< 9 10 ... 15)
-			if (!$start_invalid)
-				$pageindex .= '[<b>' . ($start / $num_per_page + 1) . '</b>] ';
-			else
-				$pageindex .= sprintf($base_link, $start, $start / $num_per_page + 1);
-	
-			// Show the pages after the current one... (1 ... 6 7 [8] >9 10< ... 15)
-			$tmpMaxPages = (int) (($max_value - 1) / $num_per_page) * $num_per_page;
-			for ($nCont = 1; $nCont <= $PageContiguous; $nCont++)
-				if ($start + $num_per_page * $nCont <= $tmpMaxPages)
-				{
-					$tmpStart = $start + $num_per_page * $nCont;
-					$pageindex .= sprintf($base_link, $tmpStart, $tmpStart / $num_per_page + 1);
-				}
-	
-			// Show the '...' part near the end. (1 ... 6 7 [8] 9 10 >...< 15)
-			if ($start + $num_per_page * ($PageContiguous + 1) < $tmpMaxPages)
-				$pageindex .= '<b> ... </b>';
-	
-			// Show the last number in the list. (1 ... 6 7 [8] 9 10 ... >15<)
-			if ($start + $num_per_page * $PageContiguous < $tmpMaxPages)
-				$pageindex .= sprintf($base_link, $tmpMaxPages, $tmpMaxPages / $num_per_page + 1);
-	
-		return $pageindex;
-	}
+
 	/**
-	 * Realizó una comprobación de versión de PHP ya que magic_quotes_gpc 
-	 * es obsoleta desde 7.4.0 y removida de PHP 8
-	 * @link https://www.php.net/manual/en/function.get-magic-quotes-gpc.php
-	*/
-	# Seguridad
-	function setSecure($var, $xss = FALSE) {
-		$var = db_exec('real_escape_string', 
-			(version_compare(PHP_VERSION, "7.2.0", ">=")) 
-			? stripslashes($var) 
-			: function_exists('magic_quotes_gpc' ? stripslashes($var) : $var)
-		);
-      if ($xss) $var = htmlspecialchars($var, ENT_COMPAT|ENT_QUOTES, 'UTF-8');
-     return $var;
-   }
-   # Evitamos que realice muchas tareas en poco tiempo
-   function antiFlood(bool $print = true, string $type = 'post', string $msg = '') {
-      global $tsUser;
-      //
-      $now = time();
-      $msg = empty($msg) ? 'No puedes realizar tantas acciones en tan poco tiempo.' : $msg;
-        //
-      $limit = $tsUser->permisos['goaf'];
-      $resta = $now - $_SESSION['flood'][$type];
-      if($resta < $limit) {
-      	$seg = $limit - $resta;
-         $msg = "0: {$msg} Int&eacute;ntalo en {$seg} segundos.";
-         // TERMINAR O RETORNAR VALOR
-         if($print) die($msg);
-         else return $msg;
-      } else {
-         $_SESSION['flood'][$type] = (empty($_SESSION['flood'][$type])) ? time() : $now;
-         return true;
-      }
-   }
-	/**
-	 * Mejoramos el seo para los enlaces (Me base en estas)
-	 * @link https://www.baulphp.com/urls-amigables-con-php-ejemplo-completo-con-un-string/
-	 * @link https://stackoverflow.com/questions/5305879/generate-seo-friendly-urls-slugs/9535967
-	*/
-	# MAXIMA CONVERSION => URL AMIGABLES | MAX no se usa
-	function setSEO($string, $max = NULL) {
-		$string = htmlentities($string, ENT_QUOTES, 'UTF-8');
-		$string = preg_replace('~&([a-z]{1,2})(?:acute|cedil|circ|grave|lig|orn|ring|slash|th|tilde|uml);~i', '$1', $string);
-		$string = html_entity_decode($string, ENT_QUOTES, 'UTF-8');
-		$string = preg_replace('~[^0-9a-z]+~i', '-', $string);
-		$string = strtolower(trim($string, '-'));
-		return $string;
+	 * Obtiene la URL completa del sitio actual.
+	 *
+	 * @access public
+	 * @param bool $encode Si es true, devuelve la URL lista para usar en parámetros query (urlencode).
+	 * @return string
+	 */
+	public function currentUrl(bool $encode = false): string {
+	    // Capturamos el esquema de forma segura
+	    $scheme = Http::scheme();
+	    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+	    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+	    // Armamos la URL completa
+	    $url = $scheme . '://' . $host . $uri;
+	    // Retornamos codificada o limpia según se solicite
+	    return $encode ? urlencode($url) : $url;
 	}
-	/*
-		parseBBCode($bbcode)
-	*/
-	function parseBBCode($bbcode, $type = 'normal') {
-      // Class BBCode
-      include_once(TS_EXTRA . 'bbcode.inc.php');
-      $parser = new BBCode();
-      // Seleccionar texto
-      $parser->setText($bbcode);
-      // Seleccionar tipo
-      switch ($type) {
-         // NORMAL
-         case 'normal':
-         case 'smiles':
-            // BBCodes permitidos
-            $parser->setRestriction(array('url', 'code', 'quote', 'font', 'size', 'color', 'img', 'b', 'i', 'u', 's', 'align', 'spoiler', 'swf', 'video', 'goear', 'hr', 'sub', 'sup', 'table', 'td', 'tr', 'ul', 'li', 'ol', 'notice', 'info', 'warning', 'error', 'success'));
-            // SMILES
-            $parser->parseSmiles();
-            // MENCIONES
-            $parser->parseMentions();
-         break;
-         // FIRMA
-         case 'firma':
-         case 'comentario':
-           	// BBCodes permitidos
-           	$parser->setRestriction(array('url', 'font', 'size', 'color', 'img', 'b', 'i', 'u', 's', 'align', 'spoiler'));
-         break;
-         // NOTICIAS
-         case 'news':
-            // BBCodes permitidos
-            $parser->setRestriction(array('url', 'b', 'i', 'u', 's'));
-            // SMILES
-            $parser->parseSmiles();
-         break;
-      }
-      // Retornar resultado HTML
-      return $parser->getAsHtml();
-   }
-    /**
-     * @name setMenciones
-     * @access public
-     * @param string
-     * @return string
-     * @info PONE LOS LINKS A LOS MENCIONADOS
-     * @note Esta función se ha reemplazado por $parser->parseMentions(). Se reomienda exclusivamente para compatibilidad en versiones anteriores.
-     */
-    public function setMenciones($html){
-        # GLOBALES
-        global $tsUser;
-        # HACK
-        $html = $html.' ';
-        # BUSCAMOS A USUARIOS
-        preg_match_all('/\B@([a-zA-Z0-9_-]{4,16}+)\b/',$html, $users);
-        $menciones = $users[1];
-        # VEMOS CUALES EXISTEN
-        foreach($menciones as $key => $user){
-            $uid = $tsUser->getUserID($user);
-            if(!empty($uid)) {
-                $find = '@'.$user.' ';
-                $replace = '@<a href="'.$this->settings['url'].'/perfil/'.$user.'" class="hovercard" uid="'.$uid.'">'.$user.'</a> ';
-                $html = str_replace($find, $replace, $html);
-            }
-        }
-        # RETORNAMOS
-        return $html;
-    }
-    /*
-        parseSmiles($st)
-    */
-    public function parseSmiles($bbcode){
-		// SOLO SMILES (Esta opción se mantiene por compatibilidad con versiones anteriores, pero en su lugar se utiliza la opción "normal")
-        return $this->parseBBCode($bbcode, 'normal');
-    }
-	/*
-		parseBBCodeFirma($bbcode)
-	*/
-	function parseBBCodeFirma($bbcode){
-	   return $this->parseBBCode($bbcode, 'firma');
-	}
+
 	/**
-	 * setHace()
-	 * if ternario
+	 * @deprecated Desde la versión PHPost LTS. Usar json_decode() o json_encode() en su lugar.
 	*/
-	function setHace($fecha, $show = false){
-		$fecha = $fecha; 
-		$ahora = time();
-		$tiempo = $ahora-$fecha; 
-		if($fecha <= 0) return 'Nunca';
-		elseif(round($tiempo / 31536000) <= 0){ 
-			if(round($tiempo / 2678400) <= 0) { 
-				if(round($tiempo / 86400) <= 0) { 
-					if(round($tiempo / 3600) <= 0) { 
-						if(round($tiempo / 60) <= 0) { 
-						if($tiempo <= 60) $hace = 'instantes';
-						} else  { 
-							$can = round($tiempo / 60); 
-							$word = ($can <= 1) ? 'minuto' : 'minutos';
-							$hace = "{$can} {$word}"; 
-						} 
-					} else { 
-						$can = round($tiempo / 3600); 
-						$word = ($can <= 1) ? 'hora' : 'horas';
-						$hace = "{$can} {$word}"; 
-					} 
-				} else  { 
-					$can = round($tiempo / 86400); 
-					$word = ($can <= 1) ? 'd&iacute;a' : 'd&iacute;as';
-					$hace = "{$can} {$word}";
-				} 
-			} else  { 
-				$can = round($tiempo / 2678400);  
-				$word = ($can <= 1) ? 'mes' : 'meses';
-				$hace = "{$can} {$word}"; 
-			}
-		} else {
-			$can = round($tiempo / 31536000); 
-			$word = ($can <= 1) ? 'a&ntilde;o' : 'a&ntilde;os';
-			$hace = "{$can} {$word}"; 
+	public function setJSON(string $data = '', string $type = 'encode', bool $force = false): string {
+		$this->Logger->deprecated('tsCore->setJSON','json_decode() o json_encode()');
+		return ($type === 'encode') ? json_encode($data) : ($force ? json_decode($data, true) : json_decode($data));
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar Paginador::setPageLimit() en su lugar.
+	*/
+	public function setPageLimit(int $tsLimit, bool|string $start = false, int $tsMax = 0): string {
+		$this->Logger->deprecated('tsCore->setPageLimit','Paginador::setPageLimit()');
+		// Mantenemos por compatibilidad
+		return Paginador::setPageLimit($tsLimit, $start, $tsMax);
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar Paginador::setMaximos() en su lugar.
+	*/
+	public function setMaximos(int $tsLimit, int $tsMax): bool {
+		$this->Logger->deprecated('tsCore->setMaximos','Paginador::setMaximos()');
+		// Mantenemos por compatibilidad
+		return Paginador::setMaximos($tsLimit, $tsMax);
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar Paginador::getPages() en su lugar.
+	*/
+	public function getPages(int $tsTotal, int $tsLimit): array {
+		$this->Logger->deprecated('tsCore->getPages','Paginador::getPages()');
+		// Mantenemos por compatibilidad
+		return Paginador::getPages($tsTotal, $tsLimit);
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar Paginador::getPagination() en su lugar.
+	*/
+	public function getPagination(int $total, int $per_page = 10): array {
+		$this->Logger->deprecated('tsCore->getPagination','Paginador::getPagination()');
+		// Mantenemos por compatibilidad
+		return Paginador::getPagination($total, $per_page);
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar Paginador::pageIndex() en su lugar.
+	*/
+	public function pageIndex(string $base_url, int &$start, int $max_value, int $num_per_page, bool $flexible_start = false): string {
+		$this->Logger->deprecated('tsCore->pageIndex','Paginador::pageIndex()');
+		// Mantenemos por compatibilidad
+		return Paginador::pageIndex($base_url, $start, $max_value, $num_per_page, $flexible_start);
+	}
+
+	/**
+	 * Sanitiza una cadena de texto para su uso seguro en consultas SQL u outputs HTML.
+	 * Optimizado para PHP 8.4+ / 8.5+
+	 *
+	 * @access public
+	 * @param string $var Cadena a sanitizar.
+	 * @param bool $xss Si es true, aplica protección contra Cross-Site Scripting (XSS).
+	 * @return string
+	 */
+	public function setSecure(string $var = '', bool $xss = false): string {
+	    // Eliminamos barras invertidas sobrantes si existen
+	    $var = stripslashes($var);
+	    // Escape seguro para SQL
+	    $var = db_exec('real_escape_string', $var);
+	    // Protección XSS moderna si se solicita
+	    if ($xss) {
+	        $var = htmlspecialchars($var, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+	    }
+	    return $var;
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar tsUser->antiFlood() en su lugar.
+	*/
+	public function antiFlood(bool $print = true, string $type = 'post', string $msg = '', ?int $limit = null): true|string {
+		$this->Logger->deprecated('tsCore->antiFlood','tsUser->antiFlood()');
+	    global $tsUser;
+	    return $tsUser->antiFlood($print, $type, $msg, $limit);
+	}
+
+	/**
+	 * @access public
+	 * @param string $string
+	 * @param array $options
+	 * @return string
+	 */
+	public function setSEO(string $string, array $options = []): string {
+		// Reutilización del código (DRY)
+		return smarty_modifier_seo($string, $options);
+	}
+
+	/**
+	 * @access public
+	 * @param string $bbcode
+	 * @param string $type
+	 * @return string
+	 */
+	public function setBBCode(string $bbcode = '', string $type = 'normal'): string {
+		// Inicializamos la clase
+		$parser = new BBCode($this);
+		// Seleccionar texto
+		$parser->setText($bbcode);
+		// Cargamos los botones
+		$allButtons = $parser->bbcodeAllow();
+		$restriction = match($type) {
+			'firma' => array_slice($allButtons, 0, 11),
+			'news', 'noticias' => array_slice($allButtons, 0, 5),
+			default => $allButtons,
+		};
+		$parser->setRestriction($restriction);
+		// Parsear menciones si el tipo es 'normal' o 'smiles'
+		if ($type === 'normal' || $type === 'smiles') {
+			$parser->parseMentions();
 		}
-		return ($show == true) ? 'Hace '.$hace : $hace;
+		$parser->parseSmiles();
+		return $parser->getAsHtml();
 	}
-	/*
-		getUrlContent($tsUrl)
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar setBBCode() en su lugar.
 	*/
-	function getUrlContent($tsUrl){
-	   // USAMOS CURL O FILE
-	   if(function_exists('curl_init')){
-    		//Abrir conexion  
-    		$ch = curl_init();  
-    		curl_setopt($ch, CURLOPT_USERAGENT, 		$_SERVER['HTTP_USER_AGENT']);
-    		curl_setopt($ch, CURLOPT_URL,		 			$tsUrl);
-    		curl_setopt($ch, CURLOPT_TIMEOUT, 		  	60);
-    		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 	1);
-    		$result = curl_exec($ch);
-    		curl_close($ch); 
-      } else $result = @file_get_contents($tsUrl);
-		return $result;
+	public function parseBBCode(string $bbcode = '', string $type = 'normal'): string {
+		$this->Logger->deprecated('tsCore->parseBBCode','tsCore->setBBCode');
+		// Mantenemos compatibilidad
+		return $this->setBBCode($bbcode, $type);
 	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar tsUser->setMenciones() en su lugar.
+	*/
+	public function setMenciones(string $html = '') {
+		global $tsUser;
+		$this->Logger->deprecated('tsCore->setMenciones','tsUser->setMenciones');
+		// Mantemos compatibilidad
+		return $tsUser->setMenciones($html);
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar setBBCode() en su lugar.
+	*/
+	public function parseSmiles(string $bbcode): string {
+		$this->Logger->deprecated('tsCore->parseSmiles','tsCore->setBBCode');
+		return $this->setBBCode($bbcode, 'normal');
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar setBBCode() en su lugar.
+	*/
+	public function parseBBCodeFirma(string $bbcode): string {
+		$this->Logger->deprecated('tsCore->parseBBCodeFirma','tsCore->setBBCode');
+	   return $this->setBBCode($bbcode, 'firma');
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Deja de usar tsCore->setHace().
+	*/
+	public function setHace(int $fecha = 0, bool $show = false) {
+		$this->Logger->removed('tsCore->setHace', 'PHPost LTS');
+		require_once TS_SOURCES . '/extensions/plugins/modifier.hace.php';
+		return smarty_modifier_hace($fecha, $show);
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Deja de usar HttpClient::get() en su lugar.
+	*/
+	public function getUrlContent(string $tsUrl): string {
+		$this->Logger->deprecated('tsCore->getUrlContent','HttpClient::get');
+		return HttpClient::get($tsUrl);
+	}
+
 	# Función para comprobar reCaptcha v3
 	public function reCaptcha(string $publico = '') {
 	   // call curl to POST request
 	   $http = http_build_query([
-	   	'secret' => $this->settings["skey"], 
-	   	'response' => $publico, 
-	   	'remoteip' => $this->getIP()
+		'secret' => $this->settings["skey"],
+		'response' => $publico,
+		'remoteip' => $this->getIP()
 	   ]);
 	   $init = curl_init();
-      curl_setopt($init, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
-      curl_setopt($init, CURLOPT_POST, 1);
-      curl_setopt($init, CURLOPT_POSTFIELDS, $http);
-      curl_setopt($init, CURLOPT_RETURNTRANSFER, true);
-      $response = curl_exec($init);
-      curl_close($init);
-      return json_decode($response, true);
+	  curl_setopt($init, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
+	  curl_setopt($init, CURLOPT_POST, 1);
+	  curl_setopt($init, CURLOPT_POSTFIELDS, $http);
+	  curl_setopt($init, CURLOPT_RETURNTRANSFER, true);
+	  $response = curl_exec($init);
+	  curl_close($init);
+	  return json_decode($response, true);
 	}
-   /*
-       getIP
-   */
-   function getIP(){
-		if(getenv('HTTP_CLIENT_IP') && strcasecmp(getenv('HTTP_CLIENT_IP'), 'unknown')) $ip = getenv('HTTP_CLIENT_IP');	
-	  	elseif(getenv('HTTP_X_FORWARDED_FOR') && strcasecmp(getenv('HTTP_X_FORWARDED_FOR'), 'unknown')) $ip = getenv('HTTP_X_FORWARDED_FOR');
-	  	elseif(getenv('REMOTE_ADDR') && strcasecmp(getenv('REMOTE_ADDR'), 'unknown')) $ip = getenv('REMOTE_ADDR');
-	  	elseif(isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) $ip = $_SERVER['REMOTE_ADDR'];
-	  	else $ip = 'unknown';
-	  	return $this->setSecure($ip);
-   }
 
-	/* 
-		getIUP()
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar IP::getIP() en su lugar.
 	*/
-	function getIUP(array $array = [], string $prefix = ''){
-		$fields = array_keys($array);
-		$valores = array_values($array);
-		foreach($valores as $i => $val) {
-			$va_ = is_numeric($val) ? intval($val) : "'{$this->setSecure($val)}'";
-		  	$sets[$i] = $prefix.$fields[$i]." = $va_";
-		}
-		$values = implode(', ',$sets);
-		return $values;
+	public function getIP() {
+		$this->Logger->deprecated('tsCore->getIP','IP->getIP o tsCore->ip()');
+		// Mantenemos compatibilidad
+		return $this->ip();
 	}
-	
+
+	/**
+	 * Genera una cadena de asignación SQL para SET a partir de un array asociativo.
+	 * Ejemplo: ['user_name' => 'Juan', 'user_age' => 25] -> "user_name = 'Juan', user_age = 25"
+	 *
+	 * @access public
+	 * @param array $array Array asociativo [columna => valor]
+	 * @param string $prefix opcional para las columnas
+	 * @return string
+	 */
+	public function getIUP(array $array = [], string $prefix = ''): string {
+	    $sets = [];
+	    // Recorremos llave y valor directamente sin duplicar el array en memoria
+	    foreach ($array as $field => $val) {
+	        // Si es estrictamente un entero o un flotante, lo dejamos limpio, si no, lo tratamos como string seguro
+	        if (is_int($val) || is_float($val)) {
+	            $va_ = $val;
+	        } else {
+	            // Pasamos TODO lo demás por seguridad y le ponemos comillas fijas
+	            $safeVal = $this->setSecure((string)$val);
+	            $va_ = "'{$safeVal}'";
+	        }
+	        $sets[] = $prefix . $field . " = " . $va_;
+	    }
+	    return implode(', ', $sets);
+	}
+
 }

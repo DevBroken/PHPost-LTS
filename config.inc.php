@@ -1,19 +1,52 @@
-<?php  
+<?php
 
-if (!defined('TS_HEADER')) 
-	exit('No direct script access allowed');
+declare(strict_types=1);
 
-# ['hostname'] The hostname of your database server.
-$db['hostname'] = 'dbhost';
+/**
+ * PHPost Risus LTS - Archivo de Configuración
+ *
+ * Este archivo sirve como plantilla base para la configuración del sistema.
+ * El instalador automatizado leerá este archivo, reemplazará los marcadores
+ * y generará el archivo 'config.inc.php' final en la raíz del proyecto.
+ *
+ * @author PHPost Risus LTS
+ * @copyright 2027
+ */
 
-# ['username'] The username used to connect to the database
-$db['username'] = 'dbuser';
+// Restricción de seguridad: Previene la ejecución directa desde el navegador
+if (!defined('TS_HEADER')) {
+    header('HTTP/1.1 403 Forbidden');
+    exit('Acceso directo al script no permitido.');
+}
 
-# ['password'] The password used to connect to the database
-$db['password'] = 'dbpass';
+return [
 
-# ['database'] The name of the database you want to connect to
-$db['database'] = 'dbname';
+    /**
+     *--------------------------------------------------------------------------
+     * Credenciales de la Base de Datos
+     *--------------------------------------------------------------------------
+     * Parámetros esenciales para establecer la conexión con el servidor MySQL.
+     */
+    'hostname'  => 'localhost', // Generalmente 'localhost' o una dirección IP
+    'username'  => 'root', // Nombre del usuario administrador de la base de datos
+    'password'  => '', // Contraseña asociada al usuario configurado
+    'database'  => 'phpost_db', // Nombre de la base de datos destinada a PHPost
 
+    /**
+     *--------------------------------------------------------------------------
+     * Codificación y Reglas de Cotejo
+     *--------------------------------------------------------------------------
+     * Configuraciones por defecto para el soporte completo de caracteres modernos,
+     * incluyendo soporte nativo para caracteres especiales y emojis (utf8mb4).
+     */
+    'charset'   => 'utf8mb4',
+    'collation' => 'utf8mb4_unicode_ci',
 
-$display['msgs'] = 1;
+    /**
+     *--------------------------------------------------------------------------
+     * Parámetros Avanzados de Red
+     *--------------------------------------------------------------------------
+     * Puerto de comunicación del motor de base de datos.
+     */
+    'port'      => 3306 // Puerto por defecto para conexiones de MySQL/MariaDB
+];

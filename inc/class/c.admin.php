@@ -1,13 +1,13 @@
 <?php
 
-if (!defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+declare(strict_types=1);
 
 /**
- * Modelo para la adminitración
- *
- * @name    c.admin.php
- * @author  PHPost Team
-*/
+ * @author PHPost Risus LTS
+ * @copyright 2027
+ */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
 
 class tsAdmin {
 
@@ -580,7 +580,7 @@ class tsAdmin {
    public function setUserData(int $user_id = 0) {
       global $tsCore;
       # DATA
-      $data = db_exec('fetch_assoc',db_exec([__FILE__, __LINE__], 'query', 'SELECT `user_name`, `user_email`, `user_password` FROM u_miembros WHERE user_id = ' . $user_id));
+      $data = db_exec('fetch_assoc',db_exec([__FILE__, __LINE__], 'query', 'SELECT `user_name`, `user_email`, `user_password`, `user_puntos`, `user_puntosxdar`, `user_name_changes` FROM u_miembros WHERE user_id = ' . $user_id));
       # LOCALS
       $email = $tsCore->setSecure(empty($_POST['email']) ? $data['user_email'] : $_POST['email']);
       $password = $_POST['pwd'];
@@ -605,10 +605,11 @@ class tsAdmin {
          if (strlen($user_nick) < 3) return 'Nick demasiado corto.';
          if (!preg_match('/^([A-Za-z0-9]+)$/', $user_nick)) return 'Nick inv&aacute;lido';
          $up["user_name"] = $tsCore->setSecure($user_nick);
-         # Pass
+         # Pass (hash vigente + md5 legacy renovado por compatibilidad)
          if (strlen($password) < 6) return 'Contrase&ntilde;a no v&aacute;lida.';
          if ($password != $cpassword) return 'Las contrase&ntilde;as no coinciden';
          $up["user_password"] = $tsCore->setSecure(md5(md5($password) . strtolower($user_nick)));
+         $up["user_password_hash"] = $tsCore->setSecure(Password::hash($password));
       }
       # Guardamos los nuevos datos
       $update = $tsCore->getIUP($up);
@@ -622,8 +623,9 @@ class tsAdmin {
    public function deleteContent(int $user_id = 0){
       global $tsUser;
       #
-      $pass = md5(md5($_POST['password']) . strtolower($tsUser->nick));
-      if(db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', 'SELECT user_id FROM u_miembros WHERE user_id = \''.$tsUser->uid.'\' && user_password = \''.$pass.'\''))) {
+      # Verificamos la contraseña del admin en sesión (columna vigente o md5 legacy)
+      $current = !empty($tsUser->info['user_password_hash']) ? $tsUser->info['user_password_hash'] : $tsUser->info['user_password'];
+      if(Password::verify($_POST['password'], strtolower($tsUser->nick), (string)$current)) {
          # Nuevo formato mejorado (entendible)
          $todo = isset($_POST['bocuenta']);
          # Creamos un arreglo que tenga las tablas y columnas con datos
@@ -786,7 +788,9 @@ class tsAdmin {
       $datos = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM u_nicks WHERE id = '.$nick_id.' LIMIT 1'));
       # Aprobamos
       if ($_POST['accion'] === 'aprobar') {
-         db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_miembros SET user_name = \'' . $datos['name_2'] . '\', user_password = \'' . $datos['hash'] . '\', user_name_changes = user_name_changes - 1 WHERE user_id = \'' . $datos['user_id'] . '\'');
+         # Solo re-copiamos el md5 si la cuenta sigue en el esquema legacy;
+         # las cuentas modernas conservan user_password_hash (no depende del nick)
+         db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_miembros SET user_name = \'' . $datos['name_2'] . '\', user_password = IF(user_password_hash = \'\', \'' . $datos['hash'] . '\', user_password), user_name_changes = user_name_changes - 1 WHERE user_id = \'' . $datos['user_id'] . '\'');
          db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_nicks SET estado = 1 WHERE id = ' . $nick_id);
          # Enviamos un aviso
          $aviso = 'Hola <b>' . $datos['name_1'] . "</b>,\n\n Le informo que desde este momento su nombre de acceso ser&aacute; <b>" . $datos['name_2'] . "</b> . Hasta pronto.";
@@ -936,17 +940,17 @@ class tsAdmin {
 
 
         // COMPROBAMOS
-        if ($data['f_status'] == 1)
+        if ($data['f_status'] == 0)
         {
-            if (db_exec([__FILE__, __LINE__], 'query', 'UPDATE f_fotos SET f_status = \'0\' WHERE foto_id = \'' . (int)
+            if (db_exec([__FILE__, __LINE__], 'query', 'UPDATE f_fotos SET f_status = \'1\' WHERE foto_id = \'' . (int)
                 $_POST['fid'] . '\''))
             {
                 return '2: Foto rehabilitada';
             } else
                 return '0: Ocurri&oacute, un error';
-        } elseif ($data['f_status'] == 0)
+        } elseif ($data['f_status'] == 1)
         {
-            if (db_exec([__FILE__, __LINE__], 'query', 'UPDATE f_fotos SET f_status = \'1\' WHERE foto_id = \'' . (int)
+            if (db_exec([__FILE__, __LINE__], 'query', 'UPDATE f_fotos SET f_status = \'0\' WHERE foto_id = \'' . (int)
                 $_POST['fid'] . '\''))
             {
                 return '1: Foto deshabilitada.';
@@ -1176,14 +1180,14 @@ class tsAdmin {
     {
         $num = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', 'SELECT 
         (SELECT count(foto_id) FROM f_fotos WHERE f_status = \'2\') as fotos_eliminadas, 
-        (SELECT count(foto_id) FROM f_fotos WHERE f_status = \'1\') as fotos_ocultas, 
-        (SELECT count(foto_id) FROM f_fotos WHERE f_status = \'0\') as fotos_visibles, 
-        (SELECT count(post_id) FROM p_posts WHERE post_status = \'0\') as posts_visibles, 
-        (SELECT count(post_id) FROM p_posts WHERE post_status = \'1\') as posts_ocultos, 
+        (SELECT count(foto_id) FROM f_fotos WHERE f_status = \'0\') as fotos_ocultas,
+        (SELECT count(foto_id) FROM f_fotos WHERE f_status = \'1\') as fotos_visibles,
+        (SELECT count(post_id) FROM p_posts WHERE post_status = \'1\') as posts_visibles,
+        (SELECT count(post_id) FROM p_posts WHERE post_status = \'0\') as posts_ocultos,
         (SELECT count(post_id) FROM p_posts  WHERE post_status = \'2\') as posts_eliminados, 
         (SELECT count(post_id) FROM p_posts  WHERE post_status = \'3\') as posts_revision, 
-        (SELECT count(cid) FROM p_comentarios WHERE c_status = \'0\') as comentarios_posts_visibles, 
-        (SELECT count(cid) FROM p_comentarios WHERE c_status = \'1\') as comentarios_posts_ocultos, 
+        (SELECT count(cid) FROM p_comentarios WHERE c_status = \'1\') as comentarios_posts_visibles,
+        (SELECT count(cid) FROM p_comentarios WHERE c_status = \'0\') as comentarios_posts_ocultos,
         (SELECT count(user_id) FROM u_miembros WHERE user_activo = \'1\') as usuarios_activos, 
         (SELECT count(user_id) FROM u_miembros WHERE user_activo = \'0\' ) as usuarios_inactivos, 
         (SELECT count(user_id) FROM u_miembros WHERE user_baneado = \'1\' ) as usuarios_baneados, 
