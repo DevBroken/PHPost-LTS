@@ -1,0 +1,17 @@
+# Evitamos que suba conexion con base de datos
+config.inc.php
+bak.*
+*.bak
+*.bak.*
+*.test.php
+*.zip
+*.rar
+*.lock
+
+test/*
+storage/*
+!storage/uploads/.htaccess
+!storage/plugins/*
+
+storage/avatar/*
+!storage/avatar/.htaccess
