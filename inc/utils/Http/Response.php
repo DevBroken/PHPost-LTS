@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Smarty\Compile\Tag\FunctionTag;
+
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
@@ -41,7 +43,7 @@ class Response {
             $code    = 200;
         } elseif ($codigo === '2') {
             $success = true; 
-            $status  = 'warning';
+            $status  = 'info';
             $code    = 202;
         }
 
@@ -58,14 +60,33 @@ class Response {
      */
     public static function json(string $responseText): void {
         $data = self::parse($responseText);
-        
         // Define el código de estado HTTP dinámicamente (200, 400, 202, etc.)
         http_response_code($data['code']);
-        
-        // Cabecera para JSON
-        header('Content-Type: application/json; charset=utf-8');
-        
+        header('Content-Type: application/json', true, $data['code']);
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
-        exit; // Detiene la ejecución aquí, ideal para respuestas AJAX
+        exit;
+    }
+
+    private static function only(int $code, string $status, string $message): void {
+        header('Content-Type: application/json', true, $code);
+        echo json_encode([
+            'status'  => $status,
+            'success' => ($status === 'ok'),
+            'code'    => $code,
+            'message' => $message
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    public static function success(string $message): void {
+        self::only(200, 'ok', $message);
+    }
+
+    public static function info(string $message): void {
+        self::only(202, 'info', $message);
+    }
+
+    public static function error(string $message): void {
+        self::only(400, 'error', $message);
     }
 }

@@ -68,7 +68,7 @@ class HttpClient {
             $result   = curl_exec($ch);
             $error    = curl_error($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            if (PHP_VERSION_ID < 80000) curl_close($ch);
 
             if ($result === false) {
                 throw new RuntimeException("Error en cURL ({$method}): {$error}");
