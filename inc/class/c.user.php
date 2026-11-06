@@ -26,11 +26,13 @@ class tsUser {
 	public mixed $is_error;
 
 	protected tsCore $tsCore;
-	protected tsSession $tsSession;
+	protected ?tsSession $tsSession = null;
+	protected Logger $Logger;
 
-	public function __construct(tsCore $tsCore, tsSession $tsSession) {
+	public function __construct(tsCore $tsCore, tsSession $tsSession, Logger $Logger) {
 		$this->tsCore = $tsCore;
 		$this->tsSession = $tsSession;
+		$this->Logger = $Logger;
 		$this->setSession();
 		# Esta logueado, actualiza puntos por día
 		if($this->is_member) {
@@ -55,38 +57,51 @@ class tsUser {
 
 	/**
 	 * @access public
-	 * @param string $tsLevel: 0 todos | 1 visitantes | 2 miembros | 3 moderador |4 administrador
-	 * @param bool $message
+	 * @param string $level: 0 todos | 1 visitantes | 2 miembros | 3 moderador |4 administrador
 	 * @return array|bool
 	 */
-	public function setLevel(string $tsLevel = 'todos', bool $message = false): array|bool {
-		// Los mensajes
-		$setMessages = [
-			'todos' => 'Área pública.',
-			'visitante' => 'Esta página solo es vista por los visitantes.',
-			'miembro' => 'Para poder ver esta página debes iniciar sesión.',
-			'moderador' => 'Estas en un área solo para moderadores.',
-			'administrador' => 'Estas en un área solo para administradores.'
-		];
-		// Definimos los accesos!
+	public function setLevel(string $level = 'todos'): array|bool {
 		$conditions = [
-			'todos' => true, // CUALQUIERA
-			'visitantes' => $this->is_member === 0, // SOLO VISITANTES
-			'miembros' => $this->is_member === 1, // SOLO MIEMBROS
-			'moderador' => $this->is_admod || $this->hasUserPermission('moacp'), // SOLO MODERADORES
-			'administrador' => $this->is_admod === 1 // SOLO ADMIN
+			// CUALQUIERA
+			'todos' => [
+				'level' => true,
+				'message' => '',
+			],
+			// SOLO VISITANTES
+			'visitante' => [
+				'level' => $this->is_member === 0,
+				'message' => 'Esta página solo es vista por los visitantes.',
+			],
+			// SOLO MIEMBROS
+			'miembro' => [
+				'level' => $this->is_member === 1,
+				'message' => 'Para poder ver esta página debes iniciar sesión.',
+			],
+			// SOLO MODERADORES
+			'moderador' => [
+				'level' => $this->is_admod || $this->hasUserPermission('moacp'),
+				'message' => 'Estas en un área solo para moderadores.',
+			],
+			// SOLO ADMIN
+			'administrador' => [
+				'level' => $this->is_admod === 1,
+				'message' => 'Estas en un área solo para administradores.'
+			]
 		];
-		if (!isset($conditions[$tsLevel])) {
-			$tsLevel = 'todos';
+		if (!isset($conditions[$level]['level'])) {
+			$level = 'todos';
 		}
-		if($message && !$conditions[$tsLevel]) {
-			// Manejo de mensajes de error
+		if(empty($conditions[$level]['level'])) {
+			return true;
+		}
+		if(!$conditions[$level]['level']) {
+			$this->Logger->error($setMessages[$level]['message'] ?? 'Error desconocido.', 'level');
 			return [
 				'titulo' => 'Error',
-				'mensaje' => $setMessages[$tsLevel] ?? 'Error desconocido.'
+				'mensaje' => $setMessages[$level]['message'] ?? 'Error desconocido.'
 			];
 		}
-		return $conditions[$tsLevel];
+		return $conditions[$level]['level'];
 	}
 
 	/**
@@ -96,34 +111,32 @@ class tsUser {
 	private function actualizarPuntos(): bool {
 		$ultimaRecarga = (int)$this->info['user_nextpuntos'];
 		$tiempoActual = time();
-		// Si aún no ha llegado el momento de la recarga, salimos temprano (Early Return)
+		// Si aún no ha llegado el momento de la recarga, salimos temprano
 		if ($ultimaRecarga >= $tiempoActual) {
 			return false;
 		}
 		$sigRecarga = strtotime('tomorrow midnight', $tiempoActual);
-		if ((int)$this->tsCore->settings['c_keep_points'] === 0) {
-			$puntosSql = (int)$this->permisos['gopfd'];
-		} else {
-			$puntosSql = 'user_puntosxdar + ' . (int)$this->permisos['gopfd'];
-		}
-		db_exec([__FILE__, __LINE__], 'query', "UPDATE u_miembros SET user_puntosxdar = {$puntosSql}, user_nextpuntos = {$sigRecarga} WHERE user_id = {$this->uid}");
+		$puntosSql = ((int)$this->tsCore->settings['c_keep_points'] === 0) ?
+			(int)$this->permisos['gopfd'] :
+			'user_puntosxdar + ' . (int)$this->permisos['gopfd'];
+
+		db_exec([__FILE__, __LINE__], 'execute', "UPDATE u_miembros SET user_puntosxdar = :puntosxdar, user_nextpuntos = :recarga WHERE user_id = :uid", [
+			'puntosxdar' => $puntosSql,
+			'recarga' => $sigRecarga,
+			'uid' => $this->uid
+		]);
 		return true;
 	}
 
 	/**
 	 * @access private
-	 * @param int $uid
+	 * @param int $rid
 	 * @return void
 	 */
-	private function setRango(int $uid = 0): void {
+	private function setRango(int $rid = 0): void {
 		// PERMISOS SEGUN RANGO
-		$this->info['rango'] = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', "SELECT r_name, r_color, r_image, r_allows FROM u_rangos WHERE rango_id = {$uid} LIMIT 1"));
-
-		// PERMISOS SEGUN RANGO
-		$allows = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', "SELECT r_allows FROM u_rangos WHERE rango_id = '{$this->info['user_rango']}' LIMIT 1"));
-
-		$this->permisos = json_decode($allows['r_allows'], true);
-
+		$this->info['rango'] = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT r_name, r_color, r_image, r_allows FROM u_rangos WHERE rango_id = :rid LIMIT 1", ['rid' => $rid]);
+		$this->permisos = json_decode($this->info['rango']['r_allows'], true);
 		/* ES MIEMBRO */
 		$this->is_member = 1;
 		// suad (Super Administrador) || sumo (Super Moderador)
@@ -181,11 +194,14 @@ class tsUser {
 	/**
 	 * @access public
 	 * @param int $user
-	 * @return array
+	 * @return bool
 	 */
-	public function isUserBlocked(int $user): array {
-		$query = db_exec([__FILE__, __LINE__], 'query', "SELECT bid FROM u_bloqueos WHERE b_user = {$user} AND b_auser = {$this->uid} LIMIT 1");
-		return db_exec('num_rows', $query);
+	public function isUserBlocked(int $user): bool {
+	    $result = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT bid FROM u_bloqueos WHERE b_user = :buser AND b_auser = :bauser LIMIT 1", [
+	        'buser' => $user,
+	        'bauser' => $this->uid
+	    ]);
+	    return $result !== null;
 	}
 
 	/**
@@ -193,64 +209,87 @@ class tsUser {
 	 * @return bool
 	 */
 	public function isUserIPBlocked(): bool {
-		$query = db_exec([__FILE__, __LINE__], 'query', "SELECT id FROM w_blacklist WHERE type = 1 AND value = :value LIMIT 1", ['value' => $this->tsCore->ip('binary')]);
-		return db_exec('num_rows', $query) === 1;
+	    $result = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT id FROM w_blacklist WHERE type = 1 AND value = :value LIMIT 1", [
+	    	'value' => $this->tsCore->ip('binary')
+	    ]);
+	    return !empty($result);
 	}
 
 	/**
 	 * @access public
 	 */
 	public function loadUser(bool $login = false) {
+		if ($this->tsSession === null) {
+	        return false;
+	    }
 		// Cargar datos (no dejamos nada al azar)
-		$sql = "SELECT u.user_id, u.user_name, u.user_password, u.user_password_hash, u.user_email, u.user_rango, u.user_puntos, u.user_posts, u.user_comentarios, u.user_seguidores, u.user_cache, u.user_puntosxdar, u.user_bad_hits, u.user_nextpuntos, u.user_registro, u.user_lastlogin, u.user_lastactive, u.user_lastpost, u.user_last_ip, u.user_name_changes, u.user_activo, u.user_vip, u.user_baneado, s.session_id, s.session_user_id, s.session_ip, s.session_time, s.session_autologin FROM u_sessions s, u_miembros u WHERE s.session_id = '{$this->tsSession->ID}' AND u.user_id = s.session_user_id";
-		$query = db_exec([__FILE__, __LINE__], 'query', $sql);
-		$this->info = db_exec('fetch_assoc', $query);
+		$this->info = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT u.user_id, u.user_name, u.user_password, u.user_password_hash, u.user_email, u.user_rango, u.user_puntos, u.user_posts, u.user_comentarios, u.user_seguidores, u.user_cache, u.user_puntosxdar, u.user_bad_hits, u.user_nextpuntos, u.user_registro, u.user_lastlogin, u.user_lastactive, u.user_lastpost, u.user_last_ip, u.user_name_changes, u.user_activo, u.user_vip, u.user_baneado, s.session_id, s.session_user_id, s.session_ip, s.session_time, s.session_autologin FROM u_sessions s JOIN u_miembros u ON u.user_id = s.session_user_id WHERE s.session_id = :session_id AND u.user_id = s.session_user_id LIMIT 1", [
+	        'session_id' => $this->tsSession->ID
+	    ]);
 		// Existe el usuario?
 		if(!isset($this->info['user_id'])) return false;
-		$this->setRango();
+		$this->setRango((int)$this->info['user_rango']);
 		// NOMBRE
-		$this->nick 		= (string)$this->info['user_name'];
-		$this->uid 			= (int)$this->info['user_id'];
-		$this->is_banned 	= (int)$this->info['user_baneado'];
+		$this->nick = (string)$this->info['user_name'];
+		$this->uid = (int)$this->info['user_id'];
+		$this->is_banned = (int)$this->info['user_baneado'];
 		// ULTIMA ACCION
-		$time = time();
-		db_exec([__FILE__, __LINE__], 'query', "UPDATE u_miembros SET user_lastactive = {$time} WHERE user_id = {$this->uid}");
-		// Si ha iniciado sesión cargamos estos datos.
+	    $update = "UPDATE u_miembros SET user_lastactive = :time";
+	    $params = [
+	        'time' => time(),
+	        'uid' => $this->uid
+	    ];
 		if($login) {
-			// Registramos la ultima IP y logueo
-			db_exec([__FILE__, __LINE__], 'query', "UPDATE u_miembros SET user_last_ip = '{$this->tsSession->ip_address}', user_lastlogin = {$this->tsSession->time_now} WHERE user_id = {$this->uid}");
+	        // Registramos la última IP y logueo si corresponde
+	        $update .= ", user_last_ip = :last_ip, user_lastlogin = :last_login";
+	        $params['last_ip'] = $this->tsSession->ip_address;
+	        $params['last_login'] = $this->tsSession->time_now;
 		}
+		$update .= " WHERE user_id = :uid";
+		db_exec([__FILE__, __LINE__], 'execute', $update, $params);
 		// Borrar variable session
-		unset($this->tsSession);
+		$this->tsSession = null;
 	}
 
 	/**
 	 * @access private
-	 * Verifica la contraseña de un usuario.
-	 * Orden: user_password_hash (vigente, password_hash) -> user_password (md5 legacy).
-	 * Si la clave es correcta y el hash es legacy o está desactualizado,
-	 * se guarda el hash moderno en user_password_hash (migración transparente).
 	 * @param string $password
 	 * @param string $user
 	 * @param array $data
-	 * @return string '' si es correcta, o el mensaje de error '0: ...'.
+	 * @return string
 	 */
 	private function checkPassword(string $password, string $user, array $data): string {
-		$userId		= (int)$data['user_id'];
+		$userId = (int)$data['user_id'];
 		// Elegimos qué hash usar: priorizamos el nuevo, si está vacío usamos el legacy
 		$isLegacy = empty($data['user_password_hash']) ? 'password' : 'password_hash';
 		$currentHash = (string)($data["user_{$isLegacy}"] ?? '');
 		// Hacemos la verificación una sola vez
     	$check = Password::verifyWithMigration($password, $user, $currentHash);
     	if (!$check['ok']) {
-        	return '0: Tu contrase&ntilde;a es incorrecta.';
+        	return 'Tu usuario/contraseña no coinciden.';
     	}
     	// Si requiere migración (ya sea por algoritmo viejo o por actualización del nuevo)
 		if ($check['migrate']) {
 			$newHash = Password::hash($password);
-			db_exec([__FILE__, __LINE__], 'query', "UPDATE u_miembros SET user_password_hash = '{$newHash}' WHERE user_id = {$userId}");
+			db_exec([__FILE__, __LINE__], 'execute', "UPDATE u_miembros SET user_password_hash = :hash WHERE user_id = :uid", [
+				'hash' => $newHash,
+				'uid' => $userId
+			]);
 		}
 		return '';
+	}
+
+	/*
+		Abre sesión tras una activación de cuenta.
+		No se puede usar loginUser() aquí: solo quedan hashes (password_hash o md5 legacy),
+		nunca la clave en claro, así que iniciamos la sesión directamente.
+	*/
+	public function loginAfterActivation(array $data, bool $remember = true, bool $force = true): bool {
+		if(empty($data['user_id'])) return false;
+		$this->tsSession->update((int)$data['user_id'], $remember, $force);
+		$this->loadUser(true);
+		$this->DarMedalla();
+		return true;
 	}
 
 	/**
@@ -258,163 +297,162 @@ class tsUser {
 	 * @param string $username
 	 * @param string $password
 	 * @param bool $remember
-	 * @param string $redirectTo
-	 * @return string|bool
+	 * @return void
 	 */
-	public function loginUser(string $username, string $password, bool $remember = false, string $redirectTo = '/'): string|bool
+	public function loginUser(string $username, string $password, bool $remember = false): void
 	{
+		if(empty($username) || empty($password)) Response::error('Faltan datos, formulario incompleto.');
 		$username = strtolower($username);
 		# Filtramos si es nombre o email
 		$filter = (filter_var($username, FILTER_VALIDATE_EMAIL)) ? 'email' : 'name';
 		# Consultamos
-		$data = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', "SELECT user_id, user_name, user_password, user_password_hash, user_activo, user_baneado FROM u_miembros WHERE LOWER(user_{$filter}) = '{$username}' LIMIT 1"));
+		$data = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT user_id, user_name, user_password, user_password_hash, user_activo, user_baneado FROM u_miembros WHERE LOWER(user_email) = :email OR LOWER(user_name) = :name LIMIT 1", ['email' => $username, 'name' => $username]);
 		# Comprobamos que el usuario exista
-		if(empty($data)) return '0: El usuario no existe.';
+		if(empty($data)) Response::error('El usuario no existe.');
 		# Comprobamos la contraseña (moderna o legacy md5 -> migra sola)
 		$user = ($filter === 'email') ? strtolower($data["user_name"]) : $username;
 		$error = $this->checkPassword($password, $user, $data);
 		# Devolvemos el error si la clave es incorrecta (antes se ignoraba)
-		if($error !== '') return $error;
+		if($error !== '') Response::error($error);
 		# Comprobamos que el usuario este activo
 		if((int)$data['user_activo'] === 0) {
-			return '0: Debes activar tu cuenta';
+			Response::error('Debes activar tu cuenta');
 		}
 		// Actualizamos la session
-		$this->tsSession->update((int)$data['user_id'], $remember, TRUE);
-		// Cargamos la información del usuario
-		$this->loadUser(true);
-		// COMPROBAMOS SI TENEMOS QUE ASIGNAR MEDALLAS
-		$this->DarMedalla();
-		/* REDERIGIR */
-		if($redirectTo !== '/') {
-			$this->tsCore->redirectTo($redirectTo);
-		}
-		return TRUE;
+		$this->loginAfterActivation($data, $remember, true);
+		Response::success('Inicio sesión correctamente.');
+	}
+
+	/**
+	 * @access private
+	 * @return int
+	 */
+	private function last_user(): int {
+		$c_last_active = (int)($this->tsCore->settings['c_last_active'] ?? 0);
+    	$last_active = (int)(time() - ($c_last_active * 60 * 3));
+    	return $last_active;
 	}
 
 	/**
 	 * @access public
 	 * @param int $user_id
-	 * @param string $redirectTo
 	 * @return void
 	 */
-	public function logoutUser(int $user_id, string $redirectTo = '/'): void {
+	public function logoutUser(int $user_id): void {
 		/* BORRAR SESSION */
-		$this->tsSession->read();
-		$this->tsSession->destroy();
+		$tsSession = new tsSession;
+		$tsSession->read();
+		$tsSession->destroy();
 		/* LIMPIAR VARIABLES */
 		$this->info = '';
 		$this->is_member = 0;
-		// Calcular tiempo de inactividad
-		$c_last_active = (int)($this->tsCore->settings['c_last_active'] ?? 0);
-    	$last_active = (int)(time() - ($c_last_active * 60 * 3));
-    	// Forzamos el cast!
-    	$safe_user_id = (int)$user_id;
-		# UPDATE
-		$last_active = (time() - (((int)$this->tsCore->settings['c_last_active'] * 60) * 3));
-		db_exec([__FILE__, __LINE__], 'query', "UPDATE u_miembros SET user_lastactive = {$last_active} WHERE user_id = {$safe_user_id}");
+		db_exec([__FILE__, __LINE__], 'execute', "UPDATE u_miembros SET user_lastactive = :active WHERE user_id = :uid", [
+			'active' => $this->last_user(),
+			'uid' => (int)$user_id
+		]);
 		/* REDERIGIR */
-		$this->tsCore->redirectTo($redirectTo);
+		$this->tsCore->navigate('/');
 		exit;
 	}
 
 	/**
 	 * @access public
 	 * @param int $tsUserID
-	 * @param int $tsKey
-	 * @return bool
+	 * @param string $tsKey
+	 * @return bool|array
 	 */
-	public function userActivate(int $tsUserID = 0, int $tsKey = 0): bool {
+	public function userActivate(int $tsUserID = 0, string $tsKey = ''): bool|array {
 		if(empty($tsUserID)) $tsUserID = (int)$_GET['uid'];
 		if(empty($tsKey)) $tsKey = $this->tsCore->setSecure($_GET['key']);
 		//
-		$query = db_exec([__FILE__, __LINE__], 'query', "SELECT user_id, user_name, user_password, user_password_hash, user_registro FROM u_miembros WHERE user_id = {$tsUserID} LIMIT 1");
-		$tsData = db_exec('fetch_assoc', $query);
-		$tsKeyLocal = md5($tsData['user_registro']);
-		//
-		if(db_exec('num_rows', $query) == 0 || $tsKey != $tsKeyLocal){
+		$tsData = db_exec([__FILE__, __LINE__], 'query', "SELECT user_id, user_name, user_password, user_password_hash, user_registro FROM u_miembros WHERE user_id = :uid LIMIT 1", [
+			'uid' => $tsUserID
+		]);
+		if(empty($tsData)) {
 			return false;
-		} else {
-			if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_miembros SET user_activo = 1 WHERE user_id = \''.$tsUserID.'\'')) {
-				return $tsData;
-			}
-			else return false;
 		}
+		$tsKeyLocal = md5((string)$tsData['user_registro']);
+		//
+		if($tsKey !== $tsKeyLocal) {
+			return false;
+		}
+		$isUpdate = db_exec([__FILE__, __LINE__], 'execute', "UPDATE u_miembros SET user_activo = 1 WHERE user_id = :uid", [
+			'uid' => $tsUserID
+		]);
+		if($isUpdate) {
+			return $tsData;
+		}
+		return false;
 	}
-	/*
-		Abre sesión tras una activación de cuenta.
-		No se puede usar loginUser() aquí: solo quedan hashes (password_hash o md5 legacy),
-		nunca la clave en claro, así que iniciamos la sesión directamente.
-	*/
-	public function loginAfterActivation(array $data): bool {
-		if(empty($data['user_id'])) return false;
-		$this->tsSession->update((int)$data['user_id'], true, TRUE);
-		$this->loadUser(true);
-		$this->DarMedalla();
-		return true;
-	}
+
 	/*
 		getUserBanned()
-	*/    function getUserBanned(){
-		//
-		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM u_suspension WHERE user_id = \''.$this->uid.'\' LIMIT 1');
-		$data = db_exec('fetch_assoc', $query);
-		if($data === null) {
-			return '';
-		}
-		//
-		$now = time();
-		//
-		if($data['susp_termina'] > 1 && $data['susp_termina'] < $now){
-			db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_miembros SET user_baneado = 0 WHERE user_id = \''.$this->uid.'\'');
-			db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM u_suspension WHERE user_id = \''.$this->uid.'\'');
-			return false;
-		} else return $data;
-	}
-	/*
-		getUserID($tsUsername)
 	*/
-	function getUserID($tsUser){
-	global $tsCore;
-		//
-		$tsUsername = strtolower($tsUser);
-		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT user_id FROM u_miembros WHERE LOWER(user_name) = \''.$tsCore->setSecure($tsUsername).'\' LIMIT 1');
-		$tsUser = db_exec('fetch_assoc', $query);
-
-		$tsUserID = $tsUser['user_id'];
-		//
-		return empty($tsUserID) ? 0 : $tsUserID;
+	public function getUserBanned(): array|bool|string {
+	    $data = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT susp_id, user_id, susp_causa, susp_date, susp_termina, susp_mod, susp_ip FROM u_suspension WHERE user_id = :uid LIMIT 1", ['uid' => $this->uid]);
+	    // Si no está suspendido
+	    if ($data === null) {
+	        return '';
+	    }
+	    // Comprobamos si la suspensión ya expiró
+	    if ((int)$data['susp_termina'] > 1 && (int)$data['susp_termina'] < time()) {
+	    	// Actualizamos el estado baneado
+	        db_exec([__FILE__, __LINE__], 'execute', "UPDATE u_miembros SET user_baneado = 0 WHERE user_id = :uid", ['uid' => $this->uid]);
+	        // Eliminamos la suspension
+	        db_exec([__FILE__, __LINE__], 'execute', "DELETE FROM u_suspension WHERE user_id = :uid", ['uid' => $this->uid]);
+	        return false;
+	    }
+	    // Si sigue suspendido, devolvemos los datos de la suspensión
+	    return $data;
 	}
-	/*
-		getUserName($user_id)
-	*/
-	function getUserName($user_id){
-		//
-		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT user_name FROM u_miembros WHERE user_id = \''.(int)$user_id.'\' LIMIT 1');
-		$tsUser = db_exec('fetch_assoc', $query);
 
-		//
-		return $tsUser['user_name'];
-	}
 	/**
-	 * @name iFollow
 	 * @access public
-	 * @param int
-	 * @return void
+	 * @param string $type 'id' obtener la id | 'name' obtener nick
+	 * @param string|int $user user_id | user_name
+	 * @return int|string retornara 'id' int | 'name' string
 	 */
-	public function iFollow($user_id){
-		# SIGO A ESTE USUARIO
-		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$user_id.'\' AND f_user = \''.$this->uid.'\' AND f_type = \'1\' LIMIT 1');
-		$data = db_exec('num_rows', $query);
+	public function getUserData(string $type, string|int $user): int|string {
+		$isNumeric = is_int($user) || ctype_digit((string)$user);
+    	$where = $isNumeric ? "user_id" : "LOWER(user_name)";
+    	$value = $isNumeric ? (int)$user : strtolower((string)$user);
+		$result = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT user_id, user_name FROM u_miembros WHERE $where = :search LIMIT 1", ['search' => $value]);
+		return ($type === 'id') ? (int)($result['user_id'] ?? 0) : (string)($result['user_name'] ?? '');
+	}
 
-		//
-		return ($data > 0) ? true : false;
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar tsUser->getUserData() en su lugar.
+	*/
+	public function getUserID(string $username): int {
+		$this->Logger->deprecated('tsUser->getUserID','tsUser->getUserData');
+		return $this->getUserData(type: 'id', user: $username);
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar tsUser->getUserData() en su lugar.
+	*/
+	public function getUserName(int $user_id): string {
+		$this->Logger->deprecated('tsUser->getUserName','tsUser->getUserData');
+		return $this->getUserData(type: 'name', user: $user_id);
+	}
+
+	/**
+	 * @access public
+	 * @param int $user_id
+	 * @return bool
+	 */
+	public function iFollow(int $user_id): bool {
+	    $result = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT follow_id FROM u_follows WHERE f_id = :fid AND f_user = :fuser AND f_type = 1 LIMIT 1", [
+	   	    'fid'   => $user_id,
+	   	    'fuser' => $this->uid
+	   	]);
+	    return ($result !== null);
 	}
 
 	/**
 	 * @name setMenciones
 	 * @access public
-	 * @param string
+	 * @param string $html
 	 * @return string
 	 */
 	public function setMenciones(string $html): string {
@@ -424,7 +462,7 @@ class tsUser {
 		$menciones = $users[1];
 		# VEMOS CUALES EXISTEN
 		foreach($menciones as $user) {
-			$uid = $this->getUserID($user);
+			$uid = $this->getUserData(type: 'id', user: $user);
 			if(!empty($uid)) {
 				$find = "@{$user}";
 				$replace = "@<a href=\"{$this->tsCore->settings['url']}/perfil/{$user}\">{$user}</a>";
@@ -436,19 +474,17 @@ class tsUser {
 	}
 
 	/**
-	 * Evita que un usuario realice demasiadas acciones en poco tiempo (Anti-Flood).
-	 * Optimizado para PHP 8.4+ / 8.5+
-	 *
+	 * @access public
 	 * @param bool $print Si es true, detiene la ejecución con die(). Si no, retorna el mensaje.
 	 * @param string $type Tipo de acción a validar (ej. 'post', 'comment', 'login').
-	 * @param string $msg Mensaje personalizado de error.
+	 * @param string $message Mensaje personalizado de error.
 	 * @param int|null $limit Tiempo límite en segundos. Si es null, se intenta leer del objeto de usuario.
 	 * @return true|string Devuelve true si pasa el filtro, o el mensaje de error si es bloqueado.
 	 */
-	public function antiFlood(bool $print = true, string $type = 'post', string $msg = '', ?int $limit = null): true|string {
+	public function antiFlood(bool $print = true, string $type = 'post', string $message = '', ?int $limit = null): true|string {
 	    $now = time();
-	    $msg = empty($msg) ? 'No puedes realizar tantas acciones en tan poco tiempo.' : $msg;
-	    // Si no se pasa un límite, intentamos obtenerlo de la propiedad de la clase o la variable global de forma segura
+	    $message = $message ?? 'No puedes realizar tantas acciones en tan poco tiempo.';
+	    //
 	    if ($limit === null) {
 	        $limit = (int)($this->permisos['goaf'] ?? 0);
 	    }
@@ -458,119 +494,82 @@ class tsUser {
 	        return true;
 	    }
 	    $lastAction = (int)$_SESSION['flood'][$type];
-	    $resta = $now - $lastAction;
+	    $resta = (int)($now - $lastAction);
 	    // Si el tiempo transcurrido es menor al límite, bloqueamos la acción
 	    if ($resta < $limit) {
 	        $seg = $limit - $resta;
-	        $errorMsg = "0: {$msg} Int&eacute;ntalo en {$seg} segundos.";
+	        $errorMsg = "0: {$message} Int&eacute;ntalo en {$seg} segundos.";
 	        if ($print) {
 	            die($errorMsg);
 	        }
 	        return $errorMsg;
 	    }
-	    // CORRECCIÓN CRÍTICA: Si pasó el tiempo del flood, actualizamos SIEMPRE con el tiempo actual
 	    $_SESSION['flood'][$type] = $now;
 	    return true;
 	}
 
 	/**
-	 * @name getVCard
-	 * @access public
-	 * @param int
-	 * @return array
-	 * @info OBTIENE LA INFORMACION DE UN USUARIO PARA UNA VCARD
-	 */
-	public function getVCard($user_id){
-		# GLOBALES
-		global $tsCore;
-		# LOCALES
-		$is_online = (time() - ($tsCore->settings['c_last_active'] * 60));
-		$is_inactive = (time() - (($tsCore->settings['c_last_active'] * 60) * 2)); // DOBLE DEL ONLINE
-		// INFORMACION GENERAL
-		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT u.user_id, u.user_name, u.user_lastactive, u.user_baneado, p.user_sexo, p.user_pais, p.p_nombre, p.p_mensaje, p.p_sitio FROM u_miembros AS u, u_perfil AS p WHERE u.user_id = \''.(int)$user_id.'\' AND p.user_id = \''.(int)$user_id.'\'');
-		$data = db_exec('fetch_assoc', $query);
-
-		//  STATS
-		$query =  db_exec([__FILE__, __LINE__], 'query', 'SELECT u.user_puntos, r.r_name, r.r_color, r.r_image FROM u_miembros AS u LEFT JOIN u_rangos AS r ON u.user_rango = r.rango_id WHERE user_id = \''.(int)$user_id.'\' LIMIT 1');
-		$data['stats'] = db_exec('fetch_assoc', $query);
-
-		$q1 = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(post_id) AS p FROM p_posts WHERE post_user = \''.(int)$user_id.'\' && post_status = \'1\''));
-		$q2 = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(cid) AS c FROM p_comentarios WHERE c_user = \''.(int)$user_id.'\' && c_status = \'1\''));
-		$q3 = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(follow_id) AS s FROM u_follows WHERE f_id = \''.(int)$user_id.'\' && f_type = \'1\''));
-
-		$data['stats']['user_posts'] = $q1[0];
-		$data['stats']['user_comentarios'] = $q2[0];
-		$data['stats']['user_seguidores'] = $q3[0];
-		// STATUS
-		if($data['user_lastactive'] > $is_online) $data['status'] = array('t' => 'Online', 'css' => 'online');
-		elseif($data['user_lastactive'] > $is_inactive) $data['status'] = array('t' => 'Inactivo', 'css' => 'inactive');
-		else $data['status'] = array('t' => 'Offline', 'css' => 'offline');
-		// SIGUIENDO
-		$data['follow'] = $this->iFollow($user_id);
-		//
-		return $data;
-	}
-	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-							// FUNCIONES EXTERNAS \\
-	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-	/*
-		getUsuarios()
+	 * @deprecated Desde la versión PHPost LTS. Ya no usara tsUser->getVCard().
 	*/
-	function getUsuarios(){
-		global $tsCore;
-		// FILTROS ||
-		$is_online = (time() - ($tsCore->settings['c_last_active'] * 60));
-		$is_inactive = (time() - (($tsCore->settings['c_last_active'] * 60) * 2)); // DOBLE DEL ONLINE
-		// ONLINE?
-		if($_GET['online'] == 'true'){
-			$w_online = 'AND u.user_lastactive > '.$is_online.'';
-		}
-		// CON FOTO
-		if($_GET['avatar'] == 'true'){
-			$w_avatar = 'AND p.p_avatar = 1';
-		}
-		// SEXO
-		if(!empty($_GET['sexo'])){
-			$sex = ($_GET['sexo'] == 'f') ? 0 : 1;
-			$w_sex = '&& p.user_sexo = \''.$sex.'\'';
-		}
-		// PAIS
-		if(!empty($_GET['pais'])){
-			$pais = $tsCore->setSecure($_GET['pais']);
-			$w_pais = '&& p.user_pais = \''.$pais.'\'';
-		}
-		// STAFF
-		if(!empty($_GET['rango'])){
-			$rango = (int)$_GET['rango'];
-			$w_rango = '&& u.user_rango = '.$rango.'';
-		}
-		// TOTAL Y PAGINAS
-		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(u.user_id) AS total FROM u_miembros AS u LEFT JOIN u_perfil AS p ON u.user_id = p.user_id WHERE u.user_activo = \'1\' && u.user_baneado = \'0\' '.$w_online.' '.$w_avatar.' '.$w_sex.' '.$w_pais.' '.$w_rango);
-		$total = db_exec('fetch_assoc', $query);
-		$total = $total['total'];
-
-		$pages = $tsCore->getPagination($total, 12);
-		// CONSULTA
-		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT u.user_id, u.user_name, p.user_pais, p.user_sexo, p.p_avatar, p.p_mensaje, u.user_rango, u.user_puntos, u.user_comentarios, u.user_posts, u.user_lastactive, u.user_baneado, r.r_name, r.r_color, r.r_image FROM u_miembros AS u LEFT JOIN u_perfil AS p ON u.user_id = p.user_id LEFT JOIN u_rangos AS r ON r.rango_id = u.user_rango WHERE u.user_activo = \'1\' && u.user_baneado = \'0\' '.$w_online.' '.$w_avatar.' '.$w_sex.' '.$w_pais.' '.$w_rango.'  ORDER BY u.user_id DESC LIMIT '.$pages['limit']);
-		// PARA ASIGNAR SI ESTA ONLINE HACEMOS LO SIGUIENTE
-		while($row = db_exec('fetch_assoc', $query)){
-			if($row['user_lastactive'] > $is_online) $row['status'] = array('t' => 'Online', 'css' => 'online');
-			elseif($row['user_lastactive'] > $is_inactive) $row['status'] = array('t' => 'Inactivo', 'css' => 'inactive');
-			else $row['status'] = array('t' => 'Offline', 'css' => 'offline');
-			// RANGO
-			$row['rango'] = array('title' => $row['r_name'], 'color' => $row['r_color'], 'image' => $row['r_image']);
-			// CARGAMOS
-			$data[] = $row;
-		}
-
-		// ACTUALES
-		$total = explode(',',$pages['limit']);
-		$total = ($total[0]) + count($data);
-		//
-		return array('data' => $data, 'pages' => $pages, 'total' => $total);
+	public function getVCard(int $user_id) {
+		$this->Logger->removed('getVCard');
 	}
+
+	/**
+	 * @access public
+	 * @return array
+	 */
+	public function getUsuarios(): array {
+	    $cLastActive = (int)($this->tsCore->settings['c_last_active'] ?? 5);
+	    $isOnline    = time() - ($cLastActive * 60);
+	    $isInactive  = time() - (($cLastActive * 60) * 2);
+	    //
+	    $whereClauses = [];
+	    $params = [];
+	    if (($_GET['online'] ?? '') === 'true') {
+	        $whereClauses[] = "u.user_lastactive > :is_online";
+	        $params['is_online'] = $isOnline;
+	    }
+	    if (!empty($_GET['sexo'])) {
+	        $whereClauses[] = "p.user_sexo = :sexo";
+	        $params['sexo'] = ($_GET['sexo'] === 'f') ? 0 : 1;
+	    }
+	    if (!empty($_GET['pais'])) {
+	        $whereClauses[] = "p.user_pais = :pais";
+	        $params['pais'] = (string)$_GET['pais'];
+	    }
+	    if (!empty($_GET['rango'])) {
+	        $whereClauses[] = "u.user_rango = :rango";
+	        $params['rango'] = (int)$_GET['rango'];
+	    }
+	    // Unimos los filtros adicionales si es que existen
+	    $filterSql = !empty($whereClauses) ? ' AND ' . implode(' AND ', $whereClauses) : '';
+	    // Obtener Total de Registros para el Paginador
+	    $countResult = db_exec([__FILE__, __LINE__], 'fetch_assoc', "SELECT COUNT(u.user_id) AS total FROM u_miembros AS u LEFT JOIN u_perfil AS p ON u.user_id = p.user_id WHERE u.user_activo = 1 AND u.user_baneado = 0 {$filterSql}", $params);
+	    $totalRecords = (int)($countResult['total'] ?? 0);
+	    $pages = Paginador::fromRequest($totalRecords, 12);
+	    // Consulta Principal de Usuarios
+	    $usersList = db_exec([__FILE__, __LINE__], 'fetch_all', "SELECT u.user_id, u.user_name, p.user_pais, p.user_sexo, p.p_avatar, p.p_mensaje, u.user_rango, u.user_puntos, u.user_comentarios, u.user_posts, u.user_lastactive, u.user_baneado, r.r_name, r.r_color, r.r_image FROM u_miembros AS u LEFT JOIN u_perfil AS p ON u.user_id = p.user_id LEFT JOIN u_rangos AS r ON r.rango_id = u.user_rango WHERE u.user_activo = 1 AND u.user_baneado = 0 {$filterSql} ORDER BY u.user_id DESC LIMIT {$pages['limit']}", $params);
+	    //
+	    $data = [];
+	    if (is_array($usersList)) {
+	        foreach ($usersList as $row) {
+	            $row['status'] = match (true) {
+	                ($row['user_lastactive'] > $isOnline)   => ['t' => 'Online', 'css' => 'online'],
+	                ($row['user_lastactive'] > $isInactive) => ['t' => 'Inactivo', 'css' => 'inactive'],
+	                default                                 => ['t' => 'Offline', 'css' => 'offline']
+	            };
+	            $row['rango'] = ['title' => $row['r_name'], 'color' => $row['r_color'], 'image' => $row['r_image']];
+	            $data[] = $row;
+	        }
+	    }
+	    [$offset] = explode(',', $pages['limit']);
+	    $currentTotal = (int)$offset + count($data);
+	    return ['data' => $data, 'pages' => $pages, 'total' => $currentTotal];
+	}
+
 	/*
-		DarMedalla()
+		DarMedalla(): No lo toco, voy a buscar otra forma para este caos :D
 	*/
 	function DarMedalla(){
 		//

@@ -37,11 +37,12 @@ require_once TS_UTILS . '/Seguridad/Security.php';
 
 // Nucleo
 require_once TS_CLASS . '/c.core.php';
-require_once TS_CLASS . '/c.user.php';
-require_once TS_CLASS . '/c.monitor.php';
+require_once TS_CLASS . '/c.emails.php';
 require_once TS_CLASS . '/c.actividad.php';
 require_once TS_CLASS . '/c.mensajes.php';
+require_once TS_CLASS . '/c.monitor.php';
 require_once TS_CLASS . '/c.smarty.php';
+require_once TS_CLASS . '/c.user.php';
 require_once TS_CLASS . '/c.visitas.php';
 
 /*
@@ -63,6 +64,7 @@ $tsActividad   = $container->get(tsActividad::class);
 $tsMP          = $container->get(tsMensajes::class);
 $tsVisitas     = $container->get(tsVisitas::class);
 $smarty        = $container->get(tsSmarty::class);
+$tsEmail       = $container->get(tsEmail::class);
 
 // Definimos el template a utilizar
 define('TS_TEMA', $tsCore->settings['tema']['t_path'] ?? 'default');
