@@ -245,6 +245,15 @@ $collections['Miembros'] = "CREATE TABLE IF NOT EXISTS `u_miembros` (
     UNIQUE KEY uq_usuario_email (user_email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
 
+$collections['Usuarios intentos login'] = "CREATE TABLE IF NOT EXISTS `u_intentos_login` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `il_attempt` VARCHAR(100) NOT NULL,
+    `il_date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `il_ip` VARBINARY(16) NULL DEFAULT NULL,
+    INDEX indice_attempt (il_attempt),
+    INDEX indice_date (il_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
 $collections['Usuarios actividad'] = "CREATE TABLE IF NOT EXISTS `u_actividad` (
     `ac_id`     BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `user_id`   BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -485,7 +494,7 @@ $collections['Sistema afiliados'] = "CREATE TABLE IF NOT EXISTS `w_afiliados` (
     INDEX indice_afiliado (a_titulo, a_date DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
 
-// Se debería dividir
+// Se debería dividir: Proximamente lo haré, pero sin perder la configuracion.
 $collections['Sistema configuracion'] = "CREATE TABLE IF NOT EXISTS `w_configuracion` (
     `tscript_id`        TINYINT UNSIGNED NOT NULL DEFAULT 0,
     `titulo`            VARCHAR(60) NOT NULL DEFAULT '',
@@ -503,8 +512,8 @@ $collections['Sistema configuracion'] = "CREATE TABLE IF NOT EXISTS `w_configura
     `c_last_active`     TINYINT(1) NOT NULL DEFAULT 0,
     `c_allow_sess_ip`   TINYINT NOT NULL DEFAULT 15,
     `c_count_guests`    TINYINT(1) NOT NULL DEFAULT 1,
-    `c_reg_active`      TINYINT(1) NOT NULL DEFAULT 0,
-    `c_reg_activate`    TINYINT(1) NOT NULL DEFAULT 1,
+    `c_reg_active`      TINYINT(1) NOT NULL DEFAULT 1, -- Registro activado
+    `c_reg_activate`    TINYINT(1) NOT NULL DEFAULT 1, -- Activar usuario registrado
     `c_reg_rango`       TINYINT NOT NULL DEFAULT 3,
     `c_met_welcome`     TINYINT(1) NOT NULL DEFAULT 0,
     `c_message_welcome` VARCHAR(500) NOT NULL DEFAULT 'Hola [usuario], [welcome] a [b][web][/b].',
@@ -528,6 +537,7 @@ $collections['Sistema configuracion'] = "CREATE TABLE IF NOT EXISTS `w_configura
     `c_desapprove_post` TINYINT(1) NOT NULL DEFAULT 0,
     `offline`           TINYINT(1) NOT NULL DEFAULT 0,
     `offline_message`   VARCHAR(255) NOT NULL DEFAULT 'Estamos en mantenimiento',
+    `captcha`           ENUM('recaptcha','turnstile') NOT NULL DEFAULT 'recaptcha',
     `pkey`              VARCHAR(72) NOT NULL DEFAULT '',
     `skey`              VARCHAR(72) NOT NULL DEFAULT '',
     `version`           VARCHAR(32) NOT NULL DEFAULT 'PHPost Risus LTS',
@@ -555,6 +565,7 @@ $collections['Sistema contacts'] = "CREATE TABLE IF NOT EXISTS `w_contacts` (
     `user_id`       BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `user_email`    VARCHAR(255) NOT NULL DEFAULT '',
     `time`          INT UNSIGNED NOT NULL DEFAULT 0,
+    `expire`        INT UNSIGNED NOT NULL DEFAULT 0,
     `type`          TINYINT(1) NOT NULL DEFAULT 0,
     `hash`          VARCHAR(72) NOT NULL DEFAULT '',
     -- ÍNDICES DE RENDIMIENTO

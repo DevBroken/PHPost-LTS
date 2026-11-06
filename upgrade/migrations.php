@@ -98,7 +98,8 @@ function upgrade_column_definitions(): array
         ['p_borradores', 'b_slug', "VARCHAR(255) NOT NULL DEFAULT ''"],
         // Miembros: columna vigente para password_hash (user_password queda
         // como legacy md5 y no se borra: sirve para verificar cuentas viejas)
-        ['u_miembros', 'user_password_hash', "VARCHAR(255) NOT NULL DEFAULT ''"]
+        ['u_miembros', 'user_password_hash', "VARCHAR(255) NOT NULL DEFAULT ''"],
+        ['w_contacts', 'expire', "INT UNSIGNED NOT NULL DEFAULT 0"],
     ];
 }
 
