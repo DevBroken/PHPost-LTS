@@ -1,5 +1,6 @@
 # Evitamos que suba conexion con base de datos
 config.inc.php
+config.phpmailer.php
 bak.*
 *.bak
 *.bak.*
