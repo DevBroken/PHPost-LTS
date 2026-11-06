@@ -1,4 +1,13 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @author PHPost Risus LTS
+ * @copyright 2027
+ */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
 
 function upload($image) {
     $server  = 'https://api.imgur.com/3/image.json';

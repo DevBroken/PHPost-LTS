@@ -238,7 +238,7 @@ class BBCode {
 
         foreach ($users[1] as $user) {
             if (!in_array($user, $founds)) {
-                $uid = $tsUser->getUserID($user);
+                $uid = $tsUser->getUserData(type: 'id', user: $user);
                 if (!empty($uid)) {
                     $find = '@' . $user . ' ';
                     $replace = '@<a href="' . $this->settings['url'] . '/perfil/' . $user . '" class="hovercard" uid="' . $uid . '">' . $user . '</a> ';

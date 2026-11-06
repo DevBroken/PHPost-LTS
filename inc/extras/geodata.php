@@ -1,4 +1,12 @@
 <?php
+
+declare(strict_types=1);
+
+/**
+ * @author PHPost Risus LTS
+ * @copyright 2027
+ */
+
 $estados['AF'] = array(42 => 'Panjshir',1 => 'Vel&#257;yat-e Badakhsh&#257;n',3 => 'Vel&#257;yat-e Baghl&#257;n',30 => 'Vel&#257;yat-e Balkh',2 => 'Vel&#257;yat-e B&#257;dgh&#299;s',5 => 'Vel&#257;yat-e B&#257;m&#299;&#257;n',6 => 'Vel&#257;yat-e Far&#257;h',7 => 'Vel&#257;yat-e F&#257;ry&#257;b',9 => 'Vel&#257;yat-e Ghowr',10 => 'Vel&#257;yat-e Helmand',11 => 'Vel&#257;yat-e Her&#257;t',31 => 'Vel&#257;yat-e Jowzj&#257;n',23 => 'Vel&#257;yat-e Kandah&#257;r',13 => 'Vel&#257;yat-e K&#257;bol',14 => 'Vel&#257;yat-e K&#257;p&#299;s&#257;',37 => 'Vel&#257;yat-e Khowst',34 => 'Vel&#257;yat-e Konar',24 => 'Vel&#257;yat-e Kondoz',35 => 'Vel&#257;yat-e Laghm&#257;n',18 => 'Vel&#257;yat-e Nangarh&#257;r',19 => 'Vel&#257;yat-e N&#299;mr&#363;z',38 => 'Vel&#257;yat-e N&#363;rest&#257;n',39 => 'Vel&#257;yat-e Or&#363;zg&#257;n',36 => 'Vel&#257;yat-e Pakt&#299;&#257;',29 => 'Vel&#257;yat-e Pakt&#299;k&#257;',40 => 'Vel&#257;yat-e Parv&#257;n',32 => 'Vel&#257;yat-e Samang&#257;n',33 => 'Vel&#257;yat-e Sar-e Pol',27 => 'Vel&#257;yat-e Vardak',28 => 'Vel&#257;yat-e Z&#257;bol',41 => 'Wil&#257;yat-e D&#257;ykund&#299;',8 => 'Wil&#257;yat-e Ghazn&#299;',17 => 'Wil&#257;yat-e L&#333;gar',26 => 'Wil&#257;yat-e Takh&#257;r');
 $estados['AL'] = array(40 => 'Beratit',41 => 'Dibr&euml;s',42 => 'Durr&euml;sit',43 => 'Elbasanit',44 => 'Fierit',45 => 'Gjirokastr&euml;s',46 => 'Kor&ccedil;&euml;s',47 => 'Kuk&euml;sit',48 => 'Lezh&euml;s',49 => 'Shkodr&euml;s',50 => 'Tiran&euml;s',51 => 'Vlor&euml;s');
 $estados['DE'] = array(1 => 'Baden-W&uuml;rttemberg',3 => 'Bremen',4 => 'Freie und Hansestadt Hamburg',2 => 'Freistaat Bayern',13 => 'Freistaat Sachsen',15 => 'Freistaat Th&uuml;ringen',16 => 'Land Berlin',11 => 'Land Brandenburg',5 => 'Land Hessen',12 => 'Land Mecklenburg-Vorpommern',6 => 'Land Niedersachsen',7 => 'Land Nordrhein-Westfalen',14 => 'Land Sachsen-Anhalt',10 => 'Land Schleswig-Holstein',8 => 'Rheinland-Pfalz',9 => 'Saarland');
