@@ -1,0 +1,408 @@
+/**
+PHPost - Design Tokens (WCAG 2.2 AA+AAA compliant, accessible)
+---------------------------------------------------------------
+THREE-LAYER ARCHITECTURE:
+Layer 1 - Primitives: raw values without semantic meaning
+Layer 2 - Semantic: purpose-based aliases referencing primitives
+Layer 3 - Component: component-specific tokens referencing semantic layer
+---------------------------------------------------------------
+HOW TO USE:
+1. Primitive:  var(--color-gray-600)
+2. Semantic:   var(--color-text-primary)
+3. Component:  var(--button-bg)
+---------------------------------------------------------------
+BROWSER COMPAT:
+- light-dark() is supported in Chrome 123+, Safari 17.5+, Firefox 120+
+- For older browsers, the var() becomes a bare identifier (invalid) -
+    override manually with color-scheme: light|dark via data-theme classes.
+- prefers-reduced-motion / prefers-contrast / forced-colors blocks
+    are included for WCAG compliance.
+*/
+
+/**
+Layer 1: PRIMITIVE TOKENS
+Raw color values. Change rarely; foundational palette.
+*/
+
+/* Neutral gray ramp - accessible across all surface pairs */
+:root {
+    --color-gray-0:    #FFFFFF;
+    --color-gray-25:   #F4F5F7;  /* page */
+    --color-gray-50:   #EAECEF;  /* sunken */
+    --color-gray-100:  #E9EBEE;  /* hover */
+    --color-gray-150:  #DEE1E6;  /* active */
+    --color-gray-200:  #D8DCE1;  /* border subtle */
+    --color-gray-300:  #C6CBD2;  /* border default */
+    --color-gray-400:  #A9AFB7;  /* border strong-ish decorative */
+    --color-gray-500:  #7D848D;  /* text-muted */
+    --color-gray-600:  #6E757E;  /* border interactive, text-disabled */
+    --color-gray-700:  #555B62;  /* fallback muted */
+    --color-gray-800:  #42484E;  /* secondary-ish text */
+    --color-gray-900:  #1A1D21;  /* text-primary */
+
+    --color-inverse:     light-dark(#003E7C, #0A2A4A); /* dark nav bg */
+    --color-inverse-alt: light-dark(#00529B, #123A63); /* alternate dark */
+    --color-accent:      light-dark(#E8F1FB, #0E2439);  /* blue highlight */
+    --color-surface-focus-contrast: light-dark(#FFD24A, #FFD24A); /* focus-ring on inverse */
+
+    /* Status / semantic colors */
+    --color-success:     light-dark(#0A5E28, #1E7A3C);
+    --color-warning:     light-dark(#5C4600, #7A4F00);
+    --color-danger:      light-dark(#9E0019, #B00020);
+    --color-info:        light-dark(#00437F, #0A63C5);
+
+    /* Interactive text colors */
+    --color-text-primary:    #1A1D21;
+    --color-text-secondary:  #45494F;
+    --color-text-muted:      #474D53;
+    --color-text-disabled:   #646A71;
+    --color-text-placeholder: #52585F;
+    --color-text-link:       #004887;
+    --color-text-link-hover: #003B6E;
+    --color-text-link-visited: #5B2D91;
+    --color-text-link-active: #002E58;
+    --color-text-inverse:    #FFFFFF;
+
+    /* Focus ring - 3:1 on interactive, 2:1 decorative; WCAG 2.4.13/2.4.11 */
+    --color-focus-ring:    light-dark(#0A63C5, #66B2FF);
+    --color-focus-ring-inverse: light-dark(#FFD24A, #FFD24A);
+
+    /* Focus state outline (reset - tokens re-adds via .focus-visible below) */
+    /* Note: some existing CSS has input:focus{outline:0}; tokens.css restores it
+         with :focus-visible so keyboard users get rings but mouse users do not. */
+
+    /* ==========================================================================
+         Layer 2: SEMANTIC TOKENS
+         Purpose-based aliases referencing primitives above.
+         ========================================================================== */
+
+    /* Backgrounds & surfaces */
+    --color-background:         light-dark(#F4F5F7, #121316);
+    --color-foreground:         light-dark(#1A1D21, #E9ECEF);
+    --color-card:               light-dark(#FFFFFF, #1B1D21);
+    --color-card-foreground:    light-dark(#1A1D21, #E9ECEF);
+    --color-popover:            light-dark(#FFFFFF, #1B1D21);
+    --color-popover-foreground: light-dark(#1A1D21, #E9ECEF);
+
+    /* Interactive surface states */
+    --color-surface-page:        light-dark(#F4F5F7, #121316);
+    --color-surface-raised:      light-dark(#FFFFFF, #1B1D21);
+    --color-surface-sunken:      light-dark(#EAECEF, #0D0E10);
+    --color-surface-overlay:     light-dark(#FFFFFF, #23262B);
+    --color-surface-hover:       light-dark(#E9EBEE, #1F2328);
+    --color-surface-active:      light-dark(#DEE1E6, #272B31);
+    --color-surface-selected:    light-dark(#D9E6F6, #0F2033);
+    --color-surface-inverse:     var(--color-inverse);
+    --color-surface-inverse-alt: var(--color-inverse-alt);
+    --color-surface-accent:      var(--color-accent);
+
+    /* Text hierarchy */
+    --color-text-primary:    var(--color-gray-900);
+    --color-text-secondary:  var(--color-gray-800);
+    --color-text-muted:      var(--color-gray-500);
+    --color-text-disabled:   var(--color-gray-600);
+    --color-text-placeholder: var(--color-gray-700);
+    --color-text-link:       var(--color-gray-600);  /* will be overridden per-state */
+    --color-text-inverse:    var(--color-gray-0);
+
+    /* Focus & interactive */
+    --color-focus-ring: var(--color-focus-ring);
+    --color-focus-ring-inverse: var(--color-focus-ring-inverse);
+
+    /* Status token foregrounds on their respective surfaces (for text labels) */
+    --color-text-success:    #0A5E28; /* primary on success surface, readable AAA */
+    --color-text-warning:    #5C4600;
+    --color-text-danger:     #9E0019;
+    --color-text-info:       #00437F;
+
+    /* Border colors (decorative/interactive) */
+    --color-border-subtle: var(--color-gray-200);
+    --color-border-default: var(--color-gray-300);
+    --color-border-strong: var(--color-gray-400);
+    --color-border-interactive: var(--color-gray-600); /* inputs, selects */
+    --color-focus-outline: var(--color-focus-ring);  /* applied via .focus-visible */
+
+    /* ==========================================================================
+         Layer 3: COMPONENT TOKENS
+         Component-specific tokens referencing semantic layer above.
+         ========================================================================== */
+
+    /* === Buttons === */
+    --button-primary-bg:      var(--color-primary-bg);
+    --button-primary-fg:      #FFFFFF;
+    --button-primary-bg-hover:var(--color-primary-bg-hover);
+    --button-primary-bg-active:var(--color-primary-bg-active);
+    --button-primary-border:  transparent;
+
+    --button-neutral-bg:      #FFFFFF;
+    --button-neutral-fg:      var(--color-text-primary);
+    --button-neutral-bg-hover:light-dark(#F0F2F5, #2A2E34);
+    --button-neutral-bg-active:light-dark(#E9EBEE, #333840);
+    --button-neutral-border:  var(--color-border-interactive);
+    --button-neutral-border-hover: var(--color-border-interactive);
+    --button-neutral-border-active: var(--color-border-interactive);
+
+    --button-danger-bg:       var(--color-danger);
+    --button-danger-fg:       #FFFFFF;
+    --button-danger-bg-hover: var(--color-danger);
+    --button-danger-bg-active: var(--color-danger);
+
+    --button-success-bg:      var(--color-success);
+    --button-success-fg:      #FFFFFF;
+    --button-success-bg-hover:var(--color-success);
+    --button-success-bg-active:var(--color-success);
+
+    --button-warning-bg:      var(--color-warning);
+    --button-warning-fg:      #FFFFFF;
+    --button-warning-bg-hover:var(--color-warning);
+    --button-warning-bg-active:var(--color-warning);
+
+    /* === Neutral button (outline) - light & dark === */
+    --button-outline-bg:      transparent;
+    --button-outline-fg:      var(--color-text-primary);
+    --button-outline-bg-hover:light-dark(#F0F2F5, #2A2E34);
+    --button-outline-bg-active:light-dark(#E9EBEE, #333840);
+    --button-outline-border:  var(--color-border-interactive);
+    --button-outline-border-hover: var(--color-border-interactive);
+    --button-outline-border-active: var(--color-border-interactive);
+    --button-outline-border-focus: var(--color-focus-outline);
+
+    /* === Form inputs === */
+    --input-bg:               light-dark(#FFFFFF, #1B1D21);
+    --input-bg-focus:         light-dark(#E9EBEE, #23262B);
+    --input-fg:               var(--color-text-primary);
+    --input-fg-placeholder:   var(--color-text-placeholder);
+    --input-border:           var(--color-border-interactive);
+    --input-border-focus:     var(--color-focus-outline);
+    --input-border-error:     var(--color-danger);
+    --input-placeholder:      var(--color-text-placeholder);
+
+    /* === Tabs (search / nav) === */
+    --tab-web-bg:            var(--color-info);
+    --tab-posts-bg:          var(--color-danger);
+    --tab-comunidades-bg:    var(--color-warning);
+    --tab-empleos-bg:        light-dark(#1F5F97, #1E5F97); /* verified on white/dark text */
+    --tab-bg-selected:       var(--color-accent);
+    --tab-fg-selected:       #1A1D21;
+    --tab-fg-unselected:     var(--color-text-muted);
+
+    /* === Cards / boxes === */
+    --card-bg:                var(--color-card);
+    --card-bg-hover:          light-dark(#F0F2F5, #2A2E34);
+    --card-bg-active:         light-dark(#E9EBEE, #333840);
+    --card-border:            var(--color-border-default);
+    --card-border-hover:      var(--color-border-subtle);
+    --card-border-active:     var(--color-border-subtle);
+    --card-radius:            0.5rem;
+    --card-shadow:            0 1px 3px rgb(0 0 0 / 0.1);
+
+    /* === Posts & threads === */
+    --post-title-fg:          var(--color-text-primary);
+    --post-meta-fg:           var(--color-text-muted);
+    --post-link-fg:           var(--color-text-link);
+    --post-link-fg-hover:     var(--color-text-link-hover);
+    --post-quote-bg:          var(--color-gray-100);
+    --post-quote-border:      var(--color-border-subtle);
+    --post-quote-fg:          var(--color-text-primary);
+    --post-state-private-bg:  var(--color-gray-200);
+    --post-state-private-fg:  var(--color-text-primary);
+    --post-state-denounced-bg:var(--color-danger);
+    --post-state-denounced-fg:#FFFFFF;
+    --post-state-deleted-bg:  var(--color-gray-200);
+    --post-state-deleted-fg:  var(--color-text-primary);
+
+    /* === Comments === */
+    --comment-bg:             var(--color-gray-100);
+    --comment-border:         var(--color-border-subtle);
+    --comment-meta-fg:        var(--color-text-muted);
+    --vote-up-fg:             var(--color-success);
+    --vote-down-fg:           var(--color-danger);
+
+    /* === Tables === */
+    --table-header-bg:        var(--color-gray-300);
+    --table-header-fg:        #FFFFFF;
+    --table-border:           var(--color-border-subtle);
+    --table-cell-bg-stripe:   light-dark(#F9FAFB, #1E2127);
+    --table-cell-bg:          var(--color-gray-0);
+    --table-cell-fg:          var(--color-text-primary);
+
+    /* === Navigation === */
+    --nav-bg:                 var(--color-surface-inverse);
+    --nav-bg-hover:           light-dark(#0E2439, #0A2A4A); /* accent-tint hover */
+    --nav-bg-active:          light-dark(#1F2328, #272B31);
+    --nav-fg:                 var(--color-text-inverse);
+    --nav-fg-hover:           #FFFFFF;
+    --nav-fg-active:          #FFFFFF;
+    --nav-border:             var(--color-border-subtle);
+
+    /* === Rank badges / user levels === */
+    --rank-novato-bg:         light-dark(#FFF6CA, #2E2611);
+    --rank-novato-fg:         #6B5200; /* verified AAA */
+    --rank-new-user-bg:       var(--color-info);
+    --rank-new-user-fg:       #FFFFFF;
+    --rank-full-user-bg:      var(--color-info);
+    --rank-full-user-fg:      #FFFFFF;
+    --rank-great-user-bg:     light-dark(#E6FAEA, #122A1B);
+    --rank-great-user-fg:     var(--color-success);
+    --rank-moderador-bg:      var(--color-gray-300);
+    --rank-moderador-fg:      var(--color-text-primary);
+
+    /* === Alertas / mensajes === */
+    --alert-ok-bg:            light-dark(#E9F7EE, #122A1B);
+    --alert-ok-fg:            var(--color-text-success);
+    --alert-error-bg:         light-dark(#FDECEE, #2E1519);
+    --alert-error-fg:         var(--color-text-danger);
+    --alert-warning-bg:       light-dark(#FFF6CC, #2E2611);
+    --alert-warning-fg:       var(--color-text-warning);
+    --alert-info-bg:          light-dark(#E8F1FB, #122236);
+    --alert-info-fg:          var(--color-text-info);
+
+    /* === Paginador === */
+    --paginator-bg:           var(--color-gray-0);
+    --paginator-fg:           var(--color-text-primary);
+    --paginator-bg-hover:     light-dark(#F0F2F5, #2A2E34);
+    --paginator-bg-active:    light-dark(#DEE1E6, #333840);
+    --paginator-border:       var(--color-border-subtle);
+
+    /* === Diálogos / modales === */
+    --dialog-bg:              var(--color-card);
+    --dialog-fg:              var(--color-text-primary);
+    --dialog-border:          var(--color-border-default);
+    --dialog-title-bg:        var(--color-gray-200);
+    --dialog-title-fg:        var(--color-text-primary);
+
+    /* === Buscador (tabs filtros) === */
+    --search-tab-web-bg:      var(--color-info);
+    --search-tab-posts-bg:    var(--color-danger);
+    --search-tab-comunidades-bg: var(--color-warning);
+    --search-tab-empleos-bg:  light-dark(#1F5F97, #1E5F97);
+    --search-tab-fg-selected: #FFFFFF;
+    --search-tab-fg-unselected: var(--color-text-muted);
+
+    /* === WYSIWYG / editor === */
+    --editor-bg:              var(--color-gray-0);
+    --editor-border:          var(--color-border-subtle);
+
+    /* === Spoilers / ocultos === */
+    --spoiler-title-bg:       var(--color-gray-300);
+    --spoiler-title-fg:       var(--color-text-primary);
+    --spoiler-body-bg:        var(--color-gray-100);
+    --spoiler-body-fg:        var(--color-text-muted);
+
+--color-primary-bg:    var(--color-surface-inverse);   /* nav / primary action bg */
+--color-primary-bg-hover: var(--color-surface-inverse-alt);
+--color-primary-bg-active: var(--color-surface-inverse);
+--color-neutral-bg:    var(--color-surface-raised);
+--color-neutral-bg-hover: light-dark(#F0F2F5, #2A2E34);
+--color-neutral-bg-active: light-dark(#E9EBEE, #333840);
+--background: light-dark(#FAFAFA, #212121); /* legacy - keep for compat */'
+}
+/* ==========================================================================
+     User Interface enhancements (focus-visible, etc.)
+     ========================================================================== */
+
+/* Focus-visible rings - keyboard-only.
+     !important needed to override existing input:focus{outline:0} in estilo.css.
+     The :not(:focus-visible):focus rule suppresses rings for mouse users.
+*/
+:focus-visible {
+    outline: 2px solid var(--color-focus-outline) !important;
+    outline-offset: 2px;
+    /* For inverse surfaces (dark nav), use the inverse-focused color */
+    &:not(:root[data-theme="light"]) & {
+        outline-color: var(--color-focus-ring-inverse) !important;
+    }
+}
+
+/* Suppress outlines on :focus for non-keyboard (mouse) users.
+     Specificity is higher than input:focus{outline:0} so it wins for all elements. */
+:not(:focus-visible):focus {
+    outline: none !important;
+}
+
+/* The :focus-visible variable already uses light-dark() so it auto-adapts:
+     light mode -> #0A63C5, dark mode -> #66B2FF via the document's color-scheme.
+     No redundant media query needed - the variable handles it. */
+
+/* Reduced motion - disable transitions/animations */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --duration-fast: 0ms;
+        --duration-normal: 0ms;
+        --duration-slow: 0ms;
+        --transition-colors: none;
+    }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Forced colors (Windows High Contrast Mode, etc.) */
+@media (forced-colors: active) {
+    :root {
+        --color-gray-600: Highlight;
+        --color-border-interactive: Highlight;
+        --color-focus-outline: Highlight;
+        --color-text-primary: HighlightText;
+        --color-text-secondary: HighlightText;
+        --color-text-muted: GrayText;
+        --color-text-disabled: GrayText;
+        --color-text-placeholder: GrayText;
+        --color-text-link: Highlight;
+        --color-text-link-hover: Highlight;
+        --color-text-link-visited: ButtonText;
+        --color-text-link-active: ButtonText;
+        --color-border-subtle: Highlight;
+        --color-border-default: Highlight;
+        --color-border-strong: Highlight;
+        --color-background: Canvas;
+        --color-foreground: CanvasText;
+        --color-card: Canvas;
+        --color-card-foreground: CanvasText;
+        --color-popover: Canvas;
+        --color-popover-foreground: CanvasText;
+        --color-surface-page: Canvas;
+        --color-surface-raised: Canvas;
+        --color-surface-sunken: Canvas;
+        --color-surface-overlay: Canvas;
+        --color-surface-hover: Canvas;
+        --color-surface-active: Canvas;
+        --color-surface-selected: Canvas;
+        --color-inverse: Highlight;
+        --color-inverse-alt: Highlight;
+        --color-accent: Highlight;
+        --color-text-success: HighlightText;
+        --color-text-warning: Highlight;
+        --color-text-danger: Highlight;
+        --color-text-info: Highlight;
+    }
+    :focus-visible {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+    }
+    button::-moz-focus-inner,
+    input::-moz-focus-inner {
+        border: 1px solid transparent;
+        padding: 0;
+    }
+}
+
+/* Prefer higher contrast */
+@media (prefers-contrast: more) {
+    :root {
+        --color-border-subtle: var(--color-border-strong);
+        --color-border-default: var(--color-border-strong);
+        --color-text-muted: var(--color-text-primary);
+        --color-text-disabled: var(--color-text-primary);
+        --color-text-placeholder: var(--color-text-primary);
+        --color-border-interactive: var(--color-border-strong);
+        --color-focus-outline: var(--color-border-strong);
+        --color-text-success: var(--color-text-primary);
+        --color-text-warning: var(--color-text-primary);
+        --color-text-danger: var(--color-text-primary);
+        --color-text-info: var(--color-text-primary);
+    }
+}

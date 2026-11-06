@@ -1,0 +1,166 @@
+/**
+ * @name Default LTS
+ * @path default
+ * @author Miguel92
+ * @tags responsive, dark, light, optimizado
+*/
+@font-face {
+    font-family: 'Roboto Condensed';
+    src: url('../../assets/fonts/RobotoCondensed.woff2') format('woff2 supports variations'),
+        url('../../assets/fonts/RobotoCondensed.woff2') format('woff2-variations');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Roboto Condensed', Roboto, Helvetica, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    -moz-tab-size: 4;
+    tab-size: 4;
+}
+
+body {
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+}
+
+input, button, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
+}
+
+img, svg, video, canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+button, [type="button"], [type="reset"], [type="submit"] {
+    -webkit-appearance: button;
+    align-items: center;
+    border-radius: var(--card-radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.95rem;
+    font-weight: 600;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    transition: background-color 150ms ease, border-color 150ms ease;
+    width: 100%;
+    &[data-variant="primary"] {
+        background-color: var(--button-primary-bg);
+        color: var(--button-primary-fg);
+        border-color: var(--button-primary-border);
+        &:hover { background-color: var(--button-primary-bg-hover); }
+        &:active { background-color: var(--button-primary-bg-active); }
+    }
+    &[data-variant="neutral"] {
+        background-color: var(--button-neutral-bg);
+        color: var(--button-neutral-fg);
+        border-color: var(--button-neutral-border);
+        &:hover {
+            background-color: var(--button-neutral-bg-hover);
+            border-color: var(--button-neutral-border-hover);
+        }
+        &:active {
+            background-color: var(--button-neutral-bg-active);
+            border-color: var(--button-neutral-border-active);
+        }
+    }
+}
+
+button:disabled, input:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Componentes armados */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--color-surface-sunken);
+    opacity: 0.98
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+    z-index: 900;
+}
+
+.modal {
+    background-color: var(--card-bg);
+    color: var(--dialog-fg);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--card-radius);
+    box-shadow: 0 30px 60px -15px rgb(0 0 0 / 0.08), 0 10px 25px -5px rgb(0 0 0 / 0.04);
+    max-width: 440px;
+    width: 100%;
+    overflow: hidden;
+    padding: 1.125rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.modal-header {
+    background-color: transparent;
+    padding: 0;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    color: var(--post-title-fg);
+}
+
+.modal-body {
+    padding: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+    font-size: 0.925rem;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+}
+
+.modal-footer {
+    background-color: transparent;
+    padding: 0;
+    border-top: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.modal-footer .btn {
+    width: auto;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+}
