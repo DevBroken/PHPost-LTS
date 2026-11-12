@@ -24,6 +24,7 @@ html {
     -webkit-text-size-adjust: 100%;
     -moz-tab-size: 4;
     tab-size: 4;
+    background: var(--color-background);
 }
 
 body {
@@ -31,7 +32,6 @@ body {
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--color-background);
     color: var(--color-foreground);
 }
 
@@ -101,66 +101,7 @@ button:disabled, input:disabled {
     opacity: 0.6;
 }
 
-/* Componentes armados */
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: var(--color-surface-sunken);
-    opacity: 0.98
-    display: grid;
-    place-items: center;
-    padding: 1.5rem;
-    z-index: 900;
-}
-
-.modal {
-    background-color: var(--card-bg);
-    color: var(--dialog-fg);
-    border: 1px solid var(--color-border-subtle);
-    border-radius: var(--card-radius);
-    box-shadow: 0 30px 60px -15px rgb(0 0 0 / 0.08), 0 10px 25px -5px rgb(0 0 0 / 0.04);
-    max-width: 440px;
-    width: 100%;
-    overflow: hidden;
-    padding: 1.125rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.modal-header {
-    background-color: transparent;
-    padding: 0;
-    font-weight: 700;
-    font-size: 1.25rem;
-    letter-spacing: -0.02em;
-    color: var(--post-title-fg);
-}
-
-.modal-body {
-    padding: 0;
-    max-height: 50vh;
-    overflow-y: auto;
-    font-size: 0.925rem;
-    line-height: 1.6;
-    color: var(--color-text-secondary);
-}
-
-.modal-footer {
-    background-color: transparent;
-    padding: 0;
-    border-top: none;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.modal-footer .btn {
-    width: auto;
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
+/* Toggle móvil */
+.menu-toggle:hover {
+    background: var(--color-surface-hover);
 }
