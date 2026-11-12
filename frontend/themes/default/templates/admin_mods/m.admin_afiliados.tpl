@@ -27,10 +27,10 @@
                                                 <td>{$af.a_hits_out}</td>
 												<td id="status_afiliado_{$af.aid}">{if $af.a_active == 0}<font color="purple">Inactivo</font>{else}<font color="green">Activo</font>{/if}</td>
                                                 <td class="admin_actions">
-                                                    <a href="afs/editar/{$af.aid}"><img src="{$tsRoutes['tema']['images']}/icons/editar.png" title="Editar"/></a>
-                                                    <a href="#" onclick="ad_afiliado.detalles({$af.aid}); return false;"><img src="{$tsRoutes['tema']['images']}/icons/details.png" title="Detalles"/></a>
-													<a onclick="admin.afs.accion({$af.aid}); return false"><img src="{$tsRoutes['tema']['images']}/reactivar.png" title="Activar/Desactivar Afiliado" /></a>
-                                                    <a href="#" onclick="admin.afs.borrar({$af.aid}); return false"><img src="{$tsRoutes['tema']['images']}/icons/close.png" title="Eliminar"/></a>
+                                                    <a href="afs/editar/{$af.aid}"><img src="{$Sources->route('assets', 'images')}/icons/editar.png" title="Editar"/></a>
+                                                    <a href="#" onclick="ad_afiliado.detalles({$af.aid}); return false;"><img src="{$Sources->route('assets', 'images')}/icons/details.png" title="Detalles"/></a>
+													<a onclick="admin.afs.accion({$af.aid}); return false"><img src="{$Sources->route('assets', 'images')}/reactivar.png" title="Activar/Desactivar Afiliado" /></a>
+                                                    <a href="#" onclick="admin.afs.borrar({$af.aid}); return false"><img src="{$Sources->route('assets', 'images')}/icons/close.png" title="Eliminar"/></a>
                                                 </td>
                                             </tr>{/foreach}
                                         </tbody>

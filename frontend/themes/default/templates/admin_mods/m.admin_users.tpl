@@ -28,10 +28,10 @@
 							<td><a href="{$tsConfig.url}/moderacion/buscador/1/1/{$m.user_last_ip}" class="geoip" target="_blank">{$m.user_last_ip}</a></td>
 							<td id="status_user_{$m.user_id}">{if $m.user_baneado == 1}<font color="red">Suspendido</font>{elseif $m.user_activo == 0}<font color="purple">Inactivo</font>{else}<font color="green">Activo</font>{/if}</td>
 							<td class="admin_actions">
-								<a href="{$tsConfig.url}/admin/users?act=show&uid={$m.user_id}"><img src="{$tsRoutes['tema']['images']}/icons/editar.png" title="Editar Usuario" /></a>
-								<a onclick="admin.users.setInActive({$m.user_id}); return false;"><img src="{$tsRoutes['tema']['images']}/reactivar.png" title="Activar/Desactivar Usuario" /></a>
-								<a href="#" onclick="mod.users.action({$m.user_id}, 'aviso', false); return false;"><img src="{$tsRoutes['tema']['images']}/icons/warning.png" title="Enviar Alerta" /></a>
-								<a href="#" onclick="mod.{if $m.user_baneado == 1}reboot({$m.user_id}, 'users', 'unban', false){else}users.action({$m.user_id}, 'ban', false){/if}; return false;"><img src="{$tsRoutes['tema']['images']}/icons/power_{if $m.user_baneado == 1}on{else}off{/if}.png" title="{if $m.user_baneado == 1}Reactivar{else}Suspender{/if} Usuario" /></a>
+								<a href="{$tsConfig.url}/admin/users?act=show&uid={$m.user_id}"><img src="{$Sources->route('assets', 'images')}/icons/editar.png" title="Editar Usuario" /></a>
+								<a onclick="admin.users.setInActive({$m.user_id}); return false;"><img src="{$Sources->route('assets', 'images')}/reactivar.png" title="Activar/Desactivar Usuario" /></a>
+								<a href="#" onclick="mod.users.action({$m.user_id}, 'aviso', false); return false;"><img src="{$Sources->route('assets', 'images')}/icons/warning.png" title="Enviar Alerta" /></a>
+								<a href="#" onclick="mod.{if $m.user_baneado == 1}reboot({$m.user_id}, 'users', 'unban', false){else}users.action({$m.user_id}, 'ban', false){/if}; return false;"><img src="{$Sources->route('assets', 'images')}/icons/power_{if $m.user_baneado == 1}on{else}off{/if}.png" title="{if $m.user_baneado == 1}Reactivar{else}Suspender{/if} Usuario" /></a>
 							</td>
 						</tr>
 					{/foreach}

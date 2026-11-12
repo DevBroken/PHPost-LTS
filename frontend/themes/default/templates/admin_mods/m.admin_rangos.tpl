@@ -35,14 +35,14 @@ $(function(){
 							<td>{$r.max_points}</td>
                      <td><img src="{$tsConfig.ran}/{$r.imagen}" /></td>
                      <td class="admin_actions">
-                        <a href="{$tsConfig.url}/admin/rangos?act=editar&rid={$r.id}&t=s"><img src="{$tsRoutes['tema']['images']}/icons/editar.png" title="Editar Rango"/></a>
+                        <a href="{$tsConfig.url}/admin/rangos?act=editar&rid={$r.id}&t=s"><img src="{$Sources->route('assets', 'images')}/icons/editar.png" title="Editar Rango"/></a>
                         {if $r.id > 3}
-                           <a href="{$tsConfig.url}/admin/rangos?act=borrar&rid={$r.id}"><img src="{$tsRoutes['tema']['images']}/icons/close.png" title="Borrar Rango"/></a>
+                           <a href="{$tsConfig.url}/admin/rangos?act=borrar&rid={$r.id}"><img src="{$Sources->route('assets', 'images')}/icons/close.png" title="Borrar Rango"/></a>
                         {/if}
                         {if $tsConfig.c_reg_rango == $r.id}
-                           <img src="{$tsRoutes['tema']['images']}/icons/yes.png" title="Rango Predeterminado al registro"/>
+                           <img src="{$Sources->route('assets', 'images')}/icons/yes.png" title="Rango Predeterminado al registro"/>
                         {else}
-                           <img id="f_2" onclick="location.href = '{$tsConfig.url}/admin/rangos/?act=setdefault&rid={$r.id}'; $('#f_2').style.cursor=wait"  style="cursor:pointer;" src="{$tsRoutes['tema']['images']}/icons/reboot.png" title="Establecer Predeterminado" />
+                           <img id="f_2" onclick="location.href = '{$tsConfig.url}/admin/rangos/?act=setdefault&rid={$r.id}'; $('#f_2').style.cursor=wait"  style="cursor:pointer;" src="{$Sources->route('assets', 'images')}/icons/reboot.png" title="Establecer Predeterminado" />
                         {/if}
                      </td>
                   </tr>
@@ -80,9 +80,9 @@ $(function(){
 							<td>{$r.max_points}</td>
                      <td><img src="{$tsConfig.ran}/{$r.imagen}" /></td>
                      <td class="admin_actions">
-                        <a href="{$tsConfig.url}/admin/rangos?act=editar&rid={$r.id}&t=p"><img src="{$tsRoutes['tema']['images']}/icons/editar.png" title="Editar Rango"/></a>
+                        <a href="{$tsConfig.url}/admin/rangos?act=editar&rid={$r.id}&t=p"><img src="{$Sources->route('assets', 'images')}/icons/editar.png" title="Editar Rango"/></a>
                         {if $r.id > 3}
-                           <a href="{$tsConfig.url}/admin/rangos?act=borrar&rid={$r.id}"><img src="{$tsRoutes['tema']['images']}/icons/close.png" title="Borrar Rango" /></a>
+                           <a href="{$tsConfig.url}/admin/rangos?act=borrar&rid={$r.id}"><img src="{$Sources->route('assets', 'images')}/icons/close.png" title="Borrar Rango" /></a>
                         {/if}
                      </td>
                   </tr>
@@ -116,7 +116,7 @@ $(function(){
                      <td>{$m.user_registro|date_format:"%d/%m/%Y"}</td>
                      <td class="admin_actions">
                         <a href="{$tsConfig.url}/admin/users?act=show&uid={$m.user_id}&t=7">
-                           <img src="{$tsRoutes['tema']['images']}/icons/editar.png" title="Editar rango" />
+                           <img src="{$Sources->route('assets', 'images')}/icons/editar.png" title="Editar rango" />
                         </a>
                      </td>
                   </tr>
@@ -171,7 +171,7 @@ $(function(){
                <dl>
                   <dt><label for="cat_img">Icono del rango:</label></dt>
                   <dd>
-                     <img src="{$tsRoutes['tema']['images']}/space.gif" style="background:url({$tsConfig.ran}/{if $tsRango.r_image}{$tsRango.r_image}{else}{$tsIcons.0}{/if}) no-repeat left center;" width="16" height="16" id="c_icon"/>
+                     <img src="{$Sources->route('assets', 'images')}/space.gif" style="background:url({$tsConfig.ran}/{if $tsRango.r_image}{$tsRango.r_image}{else}{$tsIcons.0}{/if}) no-repeat left center;" width="16" height="16" id="c_icon"/>
                      <select name="r_img" id="cat_img" style="width:164px">
                         {foreach from=$tsIcons key=i item=img}
                            <option value="{$img}" style="padding:2px 20px 0; background:#FFF url({$tsConfig.ran}/{$img}) no-repeat left center;"{if $tsRango.r_image == $img} selected{/if}>{$img}</option>

@@ -28,10 +28,10 @@
 										    <td id="comments_foto_{$f.foto_id}">{if $f.f_closed == 1}<font color="red">Cerrados</font>{else}<font color="green">Abiertos</font>{/if}</td>
 											<td id="status_foto_{$f.foto_id}">{if $f.f_status == 1}<font color="purple">Oculta</font>{elseif $f.f_status == 1}<font color="green">Visible</font>{else}<font color="red">Eliminada</font>{/if}</td>
 											<td class="admin_actions">
-												<a href="{$tsConfig.url}/fotos/editar.php?id={$f.foto_id}" target="_blank"><img src="{$tsRoutes['tema']['images']}/icons/editar.png" title="Editar Foto" /></a>
-												<a {if $f.f_status != 2}onclick="admin.fotos.setOpenClosed({$f.foto_id}); return false;"{/if}><img src="{$tsRoutes['tema']['images']}/icons/comment.png" title="{if $f.f_status == 2}No disponible{else}Abrir/Cerrar Comentarios{/if}" /></a>
-												<a {if $f.f_status != 2}onclick="admin.fotos.setShowHide({$f.foto_id}); return false;"{/if}><img src="{$tsRoutes['tema']['images']}/reactivar.png" title="{if $f.f_status == 2}No disponible{else}Mostrar/Ocultar Foto{/if}" /></a>
-											   	<a href="#" onclick="admin.fotos.borrar({$f.foto_id}); return false;"><img src="{$tsRoutes['tema']['images']}/icons/close.png" title="Borrar Foto" /></a>
+												<a href="{$tsConfig.url}/fotos/editar.php?id={$f.foto_id}" target="_blank"><img src="{$Sources->route('assets', 'images')}/icons/editar.png" title="Editar Foto" /></a>
+												<a {if $f.f_status != 2}onclick="admin.fotos.setOpenClosed({$f.foto_id}); return false;"{/if}><img src="{$Sources->route('assets', 'images')}/icons/comment.png" title="{if $f.f_status == 2}No disponible{else}Abrir/Cerrar Comentarios{/if}" /></a>
+												<a {if $f.f_status != 2}onclick="admin.fotos.setShowHide({$f.foto_id}); return false;"{/if}><img src="{$Sources->route('assets', 'images')}/reactivar.png" title="{if $f.f_status == 2}No disponible{else}Mostrar/Ocultar Foto{/if}" /></a>
+											   	<a href="#" onclick="admin.fotos.borrar({$f.foto_id}); return false;"><img src="{$Sources->route('assets', 'images')}/icons/close.png" title="Borrar Foto" /></a>
 											</td>
 										</tr>
 										{/foreach}

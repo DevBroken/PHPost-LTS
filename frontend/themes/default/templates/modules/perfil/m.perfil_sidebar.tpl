@@ -1,11 +1,11 @@
 {if $tsInfo.p_socials != '' || $tsInfo.p_sitio != ''}
    <div class="perfil-redes" style="display: flex;justify-content: space-around;align-items: center;margin-bottom: 10px;">
       {if $tsInfo.p_sitio}
-        <a class="sitio" target="_blank" href="{$tsInfo.p_sitio}" title="Mi sitio"><img height="30" width="30" alt="{$name}" src="{$tsRoutes['tema']['images']}/redes/sitio.png"/></a>
+        <a class="sitio" target="_blank" href="{$tsInfo.p_sitio}" title="Mi sitio"><img height="30" width="30" alt="{$name}" src="{$Sources->route('assets', 'images')}/icons/redes/sitio.png"/></a>
       {/if}
       {foreach $tsRedes key=name item=red}
          {if $tsInfo.p_socials.$name !== ''}
-            <a class="sitio {$name}" target="_blank" href="https://{$name}.{if $name == 'twitch'}tv{else}com{/if}/{$tsInfo.p_socials.$name}" title="{$red}"><img height="30" width="30" alt="{$name}" src="{$tsRoutes['tema']['images']}/redes/{$name}.png"/></a>
+            <a class="sitio {$name}" target="_blank" href="https://{$name}.{if $name == 'twitch'}tv{else}com{/if}/{$tsInfo.p_socials.$name}" title="{$red}"><img height="30" width="30" alt="{$name}" src="{$Sources->route('assets', 'images')}/icons/redes/{$name}.png"/></a>
          {/if}
       {/foreach}
    </div>
@@ -20,7 +20,7 @@
    {if $tsGeneral.m_total}
       <ul class="clearfix">
          {foreach from=$tsGeneral.medallas item=m}
-            <img src="{$tsRoutes['tema']['images']}/icons/med/{$m.m_image}_16.png" class="qtip" title="{$m.m_title} - {$m.m_description}"/>
+            <img src="{$Sources->route('assets', 'images')}/icons/medals/{$m.m_image}_16.png" class="qtip" title="{$m.m_title} - {$m.m_description}"/>
          {/foreach}
       </ul>
       {if $tsGeneral.m_total >= 21}

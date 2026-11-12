@@ -33,9 +33,9 @@
 							<td>{$m.m_date|date_format:"%d/%m/%Y"}</td>
 							<td id="total_med_assig_{$m.medal_id}">{$m.m_total}</td>
 							<td class="admin_actions">
-								<a onclick="admin.medallas.asignar({$m.medal_id}); return false"><img src="{$tsRoutes['tema']['images']}/icons/plus.png" title="Asignar Medalla"/></a>
-								<a href="{$tsConfig.url}/admin/medals/editar/{$m.medal_id}"><img src="{$tsRoutes['tema']['images']}/icons/editar.png" title="Editar Medalla"/></a>
-								<a onclick="admin.medallas.borrar({$m.medal_id}); return false"><img src="{$tsRoutes['tema']['images']}/icons/close.png" title="Borrar Medalla" /></a>
+								<a onclick="admin.medallas.asignar({$m.medal_id}); return false"><img src="{$Sources->route('assets', 'images')}/icons/plus.png" title="Asignar Medalla"/></a>
+								<a href="{$tsConfig.url}/admin/medals/editar/{$m.medal_id}"><img src="{$Sources->route('assets', 'images')}/icons/editar.png" title="Editar Medalla"/></a>
+								<a onclick="admin.medallas.borrar({$m.medal_id}); return false"><img src="{$Sources->route('assets', 'images')}/icons/close.png" title="Borrar Medalla" /></a>
 							</td>
 						</tr>
 					{/foreach}
@@ -69,7 +69,7 @@
 						<td>{$m.m_date|hace:true}</td>{*date_format:"%d/%m/%Y"*}
 						<td>{$m.medal_ip}</td>
 						<td class="admin_actions">
-							<a onclick="admin.medallas.borrar_asignacion({$m.id}, {$m.medal_id}); return false"><img src="{$tsRoutes['tema']['images']}/icons/close.png" title="Borrar Asignaci&oacute;n" /></a>
+							<a onclick="admin.medallas.borrar_asignacion({$m.id}, {$m.medal_id}); return false"><img src="{$Sources->route('assets', 'images')}/icons/close.png" title="Borrar Asignaci&oacute;n" /></a>
 						</td>
 					</tr>
 				{/foreach}

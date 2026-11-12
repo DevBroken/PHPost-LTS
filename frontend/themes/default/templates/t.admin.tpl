@@ -1,5 +1,5 @@
 {include "main_header.tpl"}
-                <script type="text/javascript" src="{$tsRoutes['tema']['js']}/admin.js"></script>
+                <script type="text/javascript" src="{$Sources->theme('admin.js')}"></script>
                 <div id="borradores">
 					<div class="clearfix">
                     	<div class="left" style="float:left;width:200px">

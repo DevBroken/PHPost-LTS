@@ -1,5 +1,5 @@
 {include "main_header.tpl"}
-				<script type="text/javascript" src="{$tsRoutes['tema']['js']}/favoritos.js"></script>
+				<script type="text/javascript" src="{$Sources->assets('favoritos.js')}"></script>
 				<script type="text/javascript">
                 var favoritos_data = [{$tsFavoritos}];
                 </script>

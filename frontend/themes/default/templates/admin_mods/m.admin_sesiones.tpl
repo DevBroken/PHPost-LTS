@@ -24,7 +24,7 @@
 							<td>{$s.session_time|hace:true}</td>
 							<td>{if $s.session_autologin == 0}<font color="red">NO</font>{else}<font color="green">S&Iacute;</font>{/if}</td>
 							<td class="admin_actions">
-                        <a href="#" onclick="admin.sesiones.borrar('{$s.session_id}'); return false"><img src="{$tsRoutes['tema']['images']}/icons/power_off.png" title="Cerrar sesi&oacute;n de {if $s.user_name}{$s.user_name}{else}este visitante{/if}"/></a>
+                        <a href="#" onclick="admin.sesiones.borrar('{$s.session_id}'); return false"><img src="{$Sources->route('assets', 'images')}/icons/power_off.png" title="Cerrar sesi&oacute;n de {if $s.user_name}{$s.user_name}{else}este visitante{/if}"/></a>
 							</td>
 						</tr>
 					{/foreach}

@@ -20,7 +20,7 @@
 	                	{include "m.perfil_muro.tpl"}
                         {/if}
                         </div>
-                        <div style="width:100%;text-align:center;display:none" id="perfil_load"><img src="{$tsRoutes['tema']['images']}/fb-loading.gif" /></div>
+                        <div style="width:100%;text-align:center;display:none" id="perfil_load"><img src="{$Sources->route('assets', 'images')}/fb-loading.gif" /></div>
                     </div>
                     <div class="perfil-sidebar">
                         {include "m.perfil_sidebar.tpl"}

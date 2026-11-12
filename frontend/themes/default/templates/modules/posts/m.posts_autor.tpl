@@ -4,8 +4,8 @@
                             <div class="box_rss">
                             	<a href="{$tsConfig.url}/rss/posts-usuario/{$tsAutor.user_name}">
                                 	<span style="position:relative;">
-                                    <img border="0" title="RSS con posts de {$tsAutor.user_name}" alt="RSS con posts de Usuario" style="position:absolute; top:-354px; clip:rect(352px 16px 368px 0px);" src="{$tsRoutes['tema']['images']}/big1v12.png"/>
-                                    <img border="0" style="width:14px;height:12px" src="{$tsRoutes['tema']['images']}/space.gif"/>
+                                    <img border="0" title="RSS con posts de {$tsAutor.user_name}" alt="RSS con posts de Usuario" style="position:absolute; top:-354px; clip:rect(352px 16px 368px 0px);" src="{$Sources->route('assets', 'images')}/big1v12.png"/>
+                                    <img border="0" style="width:14px;height:12px" src="{$Sources->route('assets', 'images')}/space.gif"/>
                                     </span>
                                  </a>
                             </div>
@@ -22,11 +22,11 @@
                             <br />
                             <span class="title">{$tsAutor.rango.r_name}</span>
                             <br />
-                            <img src="{$tsRoutes['tema']['images']}/space.gif" class="status {$tsAutor.status.css}" title="{$tsAutor.status.t}"/>
-                            <img src="{$tsRoutes['tema']['images']}/icons/ran/{$tsAutor.rango.r_image}" title="{$tsAutor.rango.r_name}" />
-                            <img src="{$tsRoutes['tema']['images']}/icons/{if $tsAutor.user_sexo == 0}female{else}male{/if}.png" title="{if $tsAutor.user_sexo == 0}Mujer{else}Hombre{/if}" />
-                            <img src="{$tsRoutes['tema']['images']}/flags/{$tsAutor.pais.icon}.png" style="padding:2px" title="{$tsAutor.pais.name}" />
-                            {if $tsAutor.user_id != $tsUser->uid}<a href="{if !$tsUser->is_member}{$tsConfig.url}/registro/{else}javascript:mensaje.nuevo('{$tsAutor.user_name}','','','');{/if}"><img title="Enviar mensaje privado" src="{$tsRoutes['tema']['images']}/icon-mensajes-recibidos.gif"/></a>{/if}
+                            <img src="{$Sources->route('assets', 'images')}/space.gif" class="status {$tsAutor.status.css}" title="{$tsAutor.status.t}"/>
+                            <img src="{$Sources->route('assets', 'images')}/icons/ranks/{$tsAutor.rango.r_image}" title="{$tsAutor.rango.r_name}" />
+                            <img src="{$Sources->route('assets', 'images')}/icons/{if $tsAutor.user_sexo == 0}female{else}male{/if}.png" title="{if $tsAutor.user_sexo == 0}Mujer{else}Hombre{/if}" />
+                            <img src="{$Sources->route('assets', 'images')}/flags/{$tsAutor.pais.icon}.png" style="padding:2px" title="{$tsAutor.pais.name}" />
+                            {if $tsAutor.user_id != $tsUser->uid}<a href="{if !$tsUser->is_member}{$tsConfig.url}/registro/{else}javascript:mensaje.nuevo('{$tsAutor.user_name}','','','');{/if}"><img title="Enviar mensaje privado" src="{$Sources->route('assets', 'images')}/icon-mensajes-recibidos.gif"/></a>{/if}
                             {if !$tsUser->is_member}
                             <hr class="divider"/>
                             <a class="btn_g follow_user_post" href="{$tsConfig.url}/registro/"><span class="icons follow">Seguir Usuario</span></a>
@@ -70,7 +70,7 @@
                          {if $tsPost.medallas}
 						<ul style="margin-left:11px;">
 							{foreach from=$tsPost.medallas item=m}
-        			<img src="{$tsRoutes['tema']['images']}/icons/med/{$m.m_image}_16.png" style="margin-left:1px;margin-bottom:2px;" class="qtip" title="{$m.m_title} - {$m.m_description}"/>
+        			<img src="{$Sources->route('assets', 'images')}/icons/medals/{$m.m_image}_16.png" style="margin-left:1px;margin-bottom:2px;" class="qtip" title="{$m.m_title} - {$m.m_description}"/>
                             {/foreach}
                         </ul>
 						{else}

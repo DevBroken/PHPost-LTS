@@ -10,7 +10,7 @@
                             {else}
                         	<ol>
                             	{foreach from=$tsTops.puntos item=p}
-                            	<li class="categoriaPost clearfix" style="background-image:url({$tsRoutes['tema']['images']}/icons/cat/{$p.c_img})"><a href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a> <span>{$p.post_puntos}</span></li>
+                            	<li class="categoriaPost clearfix" style="background-image:url({$Sources->route('assets', 'images')}/icons/categories/{$p.c_img})"><a href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a> <span>{$p.post_puntos}</span></li>
                                 {/foreach}
                             </ol>
                             {/if}
@@ -27,7 +27,7 @@
                             {else}
                         	<ol>
                             	{foreach from=$tsTops.favoritos item=p}
-                            	<li class="categoriaPost clearfix" style="background-image:url({$tsRoutes['tema']['images']}/icons/cat/{$p.c_img})"><a href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a> <span>{$p.post_favoritos}</span></li>
+                            	<li class="categoriaPost clearfix" style="background-image:url({$Sources->route('assets', 'images')}/icons/categories/{$p.c_img})"><a href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a> <span>{$p.post_favoritos}</span></li>
                                 {/foreach}
                             </ol>
                             {/if}
@@ -44,7 +44,7 @@
                             {else}
                         	<ol>
                             	{foreach from=$tsTops.comments item=p}
-                            	<li class="categoriaPost clearfix" style="background-image:url({$tsRoutes['tema']['images']}/icons/cat/{$p.c_img})"><a href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a> <span>{$p.post_comments}</span></li>
+                            	<li class="categoriaPost clearfix" style="background-image:url({$Sources->route('assets', 'images')}/icons/categories/{$p.c_img})"><a href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a> <span>{$p.post_comments}</span></li>
                                 {/foreach}
                             </ol>
                             {/if}
@@ -62,7 +62,7 @@
                             {else}
                         	<ol>
                             	{foreach from=$tsTops.seguidores item=p}
-                            	<li class="categoriaPost clearfix" style="background-image:url({$tsRoutes['tema']['images']}/icons/cat/{$p.c_img})"><a href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a> <span>{$p.post_seguidores}</span></li>
+                            	<li class="categoriaPost clearfix" style="background-image:url({$Sources->route('assets', 'images')}/icons/categories/{$p.c_img})"><a href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a> <span>{$p.post_seguidores}</span></li>
                                 {/foreach}
                             </ol>
                             {/if}

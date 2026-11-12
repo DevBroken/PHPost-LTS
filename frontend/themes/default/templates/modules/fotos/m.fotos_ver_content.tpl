@@ -10,10 +10,10 @@
                         <div class="v_info">
                             <a href="{$tsConfig.url}/perfil/{$tsFoto.user_name}" class="user">{$tsFoto.user_name}</a>
                             <div class="links">
-                                <span style="background-image:url({$tsRoutes['tema']['images']}/icons/ran/{$tsFoto.r_image});color:#{$tsFoto.r_color}"><strong>{$tsFoto.r_name}</strong></span>
-                                <span style="background-image:url({$tsRoutes['tema']['images']}/flags/{$tsFoto.user_pais.0|lower}.png);">{$tsFoto.user_pais.1}</span>
-                                <span style="background-image:url({$tsRoutes['tema']['images']}/icons/{if $tsFoto.user_sexo == 0}fe{/if}male.png);">{if $tsFoto.user_sexo == 1}Hombre{else}Mujer{/if}</span>
-                                {if $tsUser->is_member && $tsUser->uid != $tsFoto.f_user}<span style="background-image:url({$tsRoutes['tema']['images']}/icon-mensajes-recibidos.gif);"><a href="#" onclick="mensaje.nuevo('{$tsFoto.user_name}','','',''); return false;">Enviar Mensaje</a></span>{/if}
+                                <span style="background-image:url({$Sources->route('assets', 'images')}/icons/ranks/{$tsFoto.r_image});color:#{$tsFoto.r_color}"><strong>{$tsFoto.r_name}</strong></span>
+                                <span style="background-image:url({$Sources->route('assets', 'images')}/flags/{$tsFoto.user_pais.0|lower}.png);">{$tsFoto.user_pais.1}</span>
+                                <span style="background-image:url({$Sources->route('assets', 'images')}/icons/{if $tsFoto.user_sexo == 0}fe{/if}male.png);">{if $tsFoto.user_sexo == 1}Hombre{else}Mujer{/if}</span>
+                                {if $tsUser->is_member && $tsUser->uid != $tsFoto.f_user}<span style="background-image:url({$Sources->route('assets', 'images')}/icon-mensajes-recibidos.gif);"><a href="#" onclick="mensaje.nuevo('{$tsFoto.user_name}','','',''); return false;">Enviar Mensaje</a></span>{/if}
                             </div>
                             {if $tsUser->uid != $tsFoto.f_user && $tsUser->is_member}
                             <div class="v_follow">
@@ -31,9 +31,9 @@
                         {if $tsFoto.f_user == $tsUser->uid || $tsUser->is_admod || $tsUser->permisos.moef || $tsUser->permisos.moedfo}
                         <div class="tools">
                         {if $tsFoto.f_status != 2 && ($tsUser->is_admod || $tsUser->permisos.moef || $tsFoto.f_user == $tsUser->uid)}<a href="#" onclick="{if $tsUser->uid == $tsFoto.f_user}fotos.borrar({$tsFoto.foto_id}, 'foto'); {else}mod.fotos.borrar({$tsFoto.foto_id}, 'foto');  {/if}return false;">
-						  <img alt="Borrar" src="{$tsRoutes['tema']['images']}/borrar.png"/> Borrar</a>{/if}
+						  <img alt="Borrar" src="{$Sources->route('assets', 'images')}/borrar.png"/> Borrar</a>{/if}
                         {if $tsUser->is_admod || $tsUser->permisos.moedfo || $tsFoto.f_user == $tsUser->uid}<a href="#" onclick="location.href='{$tsConfig.url}/fotos/editar.php?id={$tsFoto.foto_id}'; return false">
-						  <img alt="Editar" src="{$tsRoutes['tema']['images']}/editar.png"/> Editar</a>{/if}
+						  <img alt="Editar" src="{$Sources->route('assets', 'images')}/editar.png"/> Editar</a>{/if}
                         </div>
                         {/if}
                         <img class="img" src="{$tsFoto.f_url}" />
@@ -95,7 +95,7 @@
                                     <div class="options">
                                         {if $tsFoto.f_user == $tsUser->info.user_id || $tsUser->is_admod || $tsUser->permisos.moecf}
                                         <a href="#" onclick="fotos.borrar({$c.cid}, 'com'); return false" class="floatR" style="margin:8px 5px">
-                            			  <img title="Borrar Comentario" alt="borrar" src="{$tsRoutes['tema']['images']}/borrar.png"/>
+                            			  <img title="Borrar Comentario" alt="borrar" src="{$Sources->route('assets', 'images')}/borrar.png"/>
                                         </a>
                                         {/if}
                                     </div>

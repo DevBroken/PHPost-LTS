@@ -12,10 +12,9 @@
                     <!--Poner aqui mas modulos-->
                 </div>
                 <div id="derecha">
-				  {if $tsConfig.c_fotos_private == 1 && !$tsUser->is_member}
-                   {else}
+				  {*if $tsConfig.c_fotos_private != 1 && $tsUser->is_member}
 				    {include "m.home_fotos.tpl"}
-				  {/if}
+				  {/if*}
                     {include "m.home_afiliados.tpl"}
                     <br class="spacer"/>
                     {include "m.global_ads_160.tpl"}

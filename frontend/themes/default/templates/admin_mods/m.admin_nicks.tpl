@@ -22,8 +22,8 @@
 							<td>{$n.time|hace:true}</td>
 							<td><a href="http://www.geoiptool.com/?IP={$n.ip}" class="geoip" target="_blank">{$n.ip}</a></td>
 							<td class="admin_actions">
-								<a href="#" onclick="admin.nicks.accion('{$n.id}', 'aprobar'); return false"><img src="{$tsRoutes['tema']['images']}/icons/power_on.png" title="Aprobar"/></a>
-								<a href="#" onclick="admin.nicks.accion('{$n.id}', 'denegar'); return false"><img src="{$tsRoutes['tema']['images']}/icons/power_off.png" title="Denegar"/></a>
+								<a href="#" onclick="admin.nicks.accion('{$n.id}', 'aprobar'); return false"><img src="{$Sources->route('assets', 'images')}/icons/power_on.png" title="Aprobar"/></a>
+								<a href="#" onclick="admin.nicks.accion('{$n.id}', 'denegar'); return false"><img src="{$Sources->route('assets', 'images')}/icons/power_off.png" title="Denegar"/></a>
 							</td>
 						</tr>
 					{/foreach}

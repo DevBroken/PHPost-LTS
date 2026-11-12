@@ -34,7 +34,7 @@
                         <ul id="v_album" style="margin-left:11px;"> 
                             {if $tsFMedallas}
                             {foreach from=$tsFMedallas item=m}
-                            <img src="{$tsRoutes['tema']['images']}/icons/med/{$m.m_image}_16.png"  style="margin-left:1px;margin-bottom:2px;" class="qtip" title="{$m.m_title} - {$m.m_description}"/>
+                            <img src="{$Sources->route('assets', 'images')}/icons/medals/{$m.m_image}_16.png"  style="margin-left:1px;margin-bottom:2px;" class="qtip" title="{$m.m_title} - {$m.m_description}"/>
                             {/foreach}
                             {else}
                             <li class="emptyData">Esta foto no tiene medallas</li>

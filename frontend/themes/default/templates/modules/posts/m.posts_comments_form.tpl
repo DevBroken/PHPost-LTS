@@ -2,7 +2,7 @@
                             <div class="answerInfo">
 								<img width="48" height="48" src="{$tsConfig.url}/files/avatar/{$tsUser->uid}_50.jpg" class="avatar-48"/><br />
                                 <div id="gif_cargando" style="text-align:center; margin-top:1em; display:none">
-                                	<img src="{$tsRoutes['tema']['images']}/tload.gif" style="border:0;" />
+                                	<img src="{$Sources->route('assets', 'images')}/tload.gif" style="border:0;" />
                                 </div>
 							</div>
 							<div class="answerTxt">

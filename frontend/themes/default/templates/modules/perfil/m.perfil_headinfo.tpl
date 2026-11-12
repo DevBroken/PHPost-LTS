@@ -74,18 +74,18 @@
                             {/if}
                             {if $tsInfo.p_socials.f}
                             <li style="float:right!important;" class="floatR">
-            					<a target="_blank" href="http://www.facebook.com/{$tsInfo.p_socials.f}" title="Facebook"><img height="14" width="14" src="{$tsRoutes['tema']['images']}/icons/facebook.png"/></a>
+            					<a target="_blank" href="http://www.facebook.com/{$tsInfo.p_socials.f}" title="Facebook"><img height="14" width="14" src="{$Sources->route('assets', 'images')}/icons/facebook.png"/></a>
             				</li>
                             {/if}
                             {if $tsInfo.p_socials.t}
                             <li style="float:right!important;" class="floatR">
-            					<a target="_blank" href="http://www.twitter.com/{$tsInfo.p_socials.t}" title="Twitter"><img height="14" width="14" src="{$tsRoutes['tema']['images']}/icons/twitter.png"/></a>
+            					<a target="_blank" href="http://www.twitter.com/{$tsInfo.p_socials.t}" title="Twitter"><img height="14" width="14" src="{$Sources->route('assets', 'images')}/icons/twitter.png"/></a>
             				</li>
                             {/if}
                            
 							{if $tsUser->is_admod == 1}
                             <li style="float:right!important;" class="floatR">
-								<a href="#" onclick="location.href = '{$tsConfig.url}/admin/users?act=show&amp;uid={$tsInfo.uid}'"><img title="Editar a {$tsInfo.nick}" src="{$tsRoutes['tema']['images']}/icons/editar.png"  class="vctip"/></a>
+								<a href="#" onclick="location.href = '{$tsConfig.url}/admin/users?act=show&amp;uid={$tsInfo.uid}'"><img title="Editar a {$tsInfo.nick}" src="{$Sources->route('assets', 'images')}/icons/editar.png"  class="vctip"/></a>
                             </li>
                             {/if}
                         </ul>

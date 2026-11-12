@@ -2,13 +2,13 @@
                     	{if $tsUser->info.user_id == $tsPost.post_user}
 						<div style="float:right; text-align: left; border: 1px solid rgb(211, 98, 98); background: none repeat scroll 0% 0% rgb(255, 255, 204); font-size: 13px; margin-top: 10px; margin-bottom: 10px; padding: 15px; width: 730px; margin-right: 5px;">
         					<span style="float: left; width: 550px; margin-top: 11px;">Si hay usuarios que insultan o generan disturbios en tu post puedes bloquearlos haciendo click sobre la opci&oacute;n desplegable de su avatar.</span>
-                            <img alt="Bloquear Usuario" src="{$tsRoutes['tema']['images']}/bloquear_usuario.png" style="float: right">
+                            <img alt="Bloquear Usuario" src="{$Sources->route('assets', 'images')}/bloquear_usuario.png" style="float: right">
                             <div style="clear: both;"></div>
                         </div>
                         {/if}
                         <div class="comentarios-title">
                             <h4 class="titulorespuestas floatL"><span id="ncomments">{$tsPost.post_comments}</span> Comentarios</h4>
-                            <img src="{$tsRoutes['tema']['images']}/tload.gif" style="border:0; margin-right:1em; display:none" class="floatR" id="com_gif"/>
+                            <img src="{$Sources->route('assets', 'images')}/tload.gif" style="border:0; margin-right:1em; display:none" class="floatR" id="com_gif"/>
                             <div class="clearfix"></div>
                             <hr />
                         </div>

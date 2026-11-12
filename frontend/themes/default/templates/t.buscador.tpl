@@ -53,8 +53,8 @@
         			<div class="searchFil">
         				<div style="margin-bottom: 5px;">
         					<img{if $tsEngine != 'google'}style="display: none;"{/if} alt="google-search-engine" src="http://www.google.com/images/poweredby_transparent/poweredby_FFFFFF.gif" id="buscador-logo-google"/>
-        					<img{if $tsEngine != 'web'}style="display: none;"{/if} alt="web-search-engine" src="{$tsRoutes['tema']['images']}/phpostmin.gif" id="buscador-logo-web"/>
-        					<img{if $tsEngine != 'tags'} style="display: none;"{/if} alt="tags-search-engine" src="{$tsRoutes['tema']['images']}/phpostmin.gif" id="buscador-logo-tags"/>
+        					<img{if $tsEngine != 'web'}style="display: none;"{/if} alt="web-search-engine" src="{$Sources->route('assets', 'images')}/phpostmin.gif" id="buscador-logo-web"/>
+        					<img{if $tsEngine != 'tags'} style="display: none;"{/if} alt="tags-search-engine" src="{$Sources->route('assets', 'images')}/phpostmin.gif" id="buscador-logo-tags"/>
         					<label style="float: right;" class="searchWith">
                             <a href="javascript:buscador.select('google')" id="select_google"{if $tsEngine == 'google'} class="here"{/if}>Google</a><span class="sep">|</span>
         					<a href="javascript:buscador.select('web')" id="select_web"{if !$tsEngine || $tsEngine == 'web'} class="here"{/if}>{$tsConfig.titulo}</a><span class="sep">|</span>
@@ -117,16 +117,16 @@
                     <tbody>
                     {foreach from=$tsResults.data item=r}
                     <tr id="div_{$r.post_id}">
-                        <td title="{$r.c_nombre}" style="background:url({$tsRoutes['tema']['images']}/icons/cat/{$r.c_img}) no-repeat center center;">&nbsp;</td>
+                        <td title="{$r.c_nombre}" style="background:url({$Sources->route('assets', 'images')}/icons/categories/{$r.c_img}) no-repeat center center;">&nbsp;</td>
                         <td style="text-align: left;">
                             <a class="titlePost" href="{$tsConfig.url}/posts/{$r.c_seo}/{$r.post_id}/{$r.post_slug}">{$r.post_title}</a>
                             <div class="info" style="background-color:#FFF">
-                                <img alt="Creado hace" src="{$tsRoutes['tema']['images']}/icons/clock.png"/> <strong>{$r.post_date|hace:true}</strong> -
-                                <img alt="Posts relacionados" src="{$tsRoutes['tema']['images']}/icons/relacionados.png"/> <a href="{$tsConfig.url}/buscador/?q={$r.post_title}&e={$tsEngine}&cat={$tsCategory}&autor={$tsAutor}">Post Relacionados</a> -
-                                <img alt="Creado por" src="{$tsRoutes['tema']['images']}/icons/autor.png"/> <a href="{$tsConfig.url}/perfil/{$r.user_name}">{$r.user_name}</a> |
-                                <img alt="0 puntos" src="{$tsRoutes['tema']['images']}/icons/puntos.png"/> Puntos <strong>{$r.post_puntos}</strong> -
-                                <img alt="0 puntos" src="{$tsRoutes['tema']['images']}/icons/favoritos.gif"/> <strong>{$r.post_favoritos}</strong> Favoritos -
-                                <img alt="0 puntos" src="{$tsRoutes['tema']['images']}/icons/comentarios.gif"/> <strong>{$r.post_comments}</strong> Comentarios
+                                <img alt="Creado hace" src="{$Sources->route('assets', 'images')}/icons/clock.png"/> <strong>{$r.post_date|hace:true}</strong> -
+                                <img alt="Posts relacionados" src="{$Sources->route('assets', 'images')}/icons/relacionados.png"/> <a href="{$tsConfig.url}/buscador/?q={$r.post_title}&e={$tsEngine}&cat={$tsCategory}&autor={$tsAutor}">Post Relacionados</a> -
+                                <img alt="Creado por" src="{$Sources->route('assets', 'images')}/icons/autor.png"/> <a href="{$tsConfig.url}/perfil/{$r.user_name}">{$r.user_name}</a> |
+                                <img alt="0 puntos" src="{$Sources->route('assets', 'images')}/icons/puntos.png"/> Puntos <strong>{$r.post_puntos}</strong> -
+                                <img alt="0 puntos" src="{$Sources->route('assets', 'images')}/icons/favoritos.gif"/> <strong>{$r.post_favoritos}</strong> Favoritos -
+                                <img alt="0 puntos" src="{$Sources->route('assets', 'images')}/icons/comentarios.gif"/> <strong>{$r.post_comments}</strong> Comentarios
                             </div>
                         </td>
                     </tr>
@@ -158,8 +158,8 @@
         				<div style="margin-bottom: 5px;">
         					<div class="logoMotorSearch">
         						<img style="height: 16px; display: none;" alt="google-search-engine" src="http://www.google.com/images/poweredby_transparent/poweredby_FFFFFF.gif" id="buscador-logo-google"/>
-        						<img alt="web-search-engine" src="{$tsRoutes['tema']['images']}/phpostmin.gif" id="buscador-logo-web"/>
-        						<img style="display: none;" alt="tags-search-engine" src="{$tsRoutes['tema']['images']}/phpostmin.gif" id="buscador-logo-tags"/>
+        						<img alt="web-search-engine" src="{$Sources->route('assets', 'images')}/phpostmin.gif" id="buscador-logo-web"/>
+        						<img style="display: none;" alt="tags-search-engine" src="{$Sources->route('assets', 'images')}/phpostmin.gif" id="buscador-logo-tags"/>
         					</div>
         
         					<label class="searchWith">

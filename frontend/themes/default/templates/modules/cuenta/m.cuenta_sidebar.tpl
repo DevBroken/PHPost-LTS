@@ -15,4 +15,4 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/croppr@2.3.1/dist/croppr.min.css" integrity="sha256-Bbkel8+0sOmrvX75oDwNElgbmrAP+Pw+XXKKUwoKiVE=" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/croppr@2.3.1/dist/croppr.min.js" integrity="sha256-VPADQYvd0gjLaeduvmP9/UZAdNW3D2sJieeJ3a3PX64=" crossorigin="anonymous"></script>
 
-<script src="{$tsRoutes['tema']['js']}/subir-avatar.js?{$smarty.now}"></script>
+<script src="{$Sources->assets('upload.image.js')}?{$smarty.now}"></script>

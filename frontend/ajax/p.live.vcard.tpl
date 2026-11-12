@@ -5,13 +5,13 @@
             <p class="fn-above" style="color:#{$tsData.stats.r_color}">{if $tsData.p_nombre}{$tsData.p_nombre}{else}{$tsData.user_name}{/if}</p>
             <p class="sn"><a href="{$tsConfig.url}/perfil/{$tsData.user_name}">@{$tsData.user_name}</a></p>
             <p class="location">
-                <img title="{$tsData.status.t}" class="status {$tsData.status.css} vctip" src="{$tsRoutes['tema']['images']}/space.gif"/>
-                <img title="{if $tsData.user_sexo == 1}Hombre{else}Mujer{/if}" src="{$tsRoutes['tema']['images']}/icons/{if $tsData.user_sexo == 0}fe{/if}male.png" class="vctip"/>
-                <img title="" style="padding:2px" src="{$tsRoutes['tema']['images']}/flags/{$tsData.user_pais|lower}.png" class="vctip"/>
-                <img title="{$tsData.stats.r_name}" src="{$tsRoutes['tema']['images']}/icons/ran/{$tsData.stats.r_image}" class="vctip"/>
-                {if $tsData.p_sitio}<a href="{$tsData.p_sitio}" target="_blank"><img src="{$tsRoutes['tema']['images']}/icons/www.png" title="Sitio web" class="vctip"/></a>{/if}
-                {if $tsUser->uid != $tsData.user_id && $tsUser->is_member}<a onclick="mensaje.nuevo('{$tsData.user_name}','','','');return false" href="#"><img src="{$tsRoutes['tema']['images']}/icon-mensajes-recibidos.gif" title="Enviar mensaje privado" class="vctip"/></a>{/if}
-				{if $tsUser->is_admod == 1}<img title="Administrar" src="{$tsRoutes['tema']['images']}/icons/editar.png" style="width:14px;height:14px;cursor:pointer;" class="vctip" onclick="location.href = '{$tsConfig.url}/admin/users?act=show&amp;uid={$tsData.user_id}'"/>{/if}
+                <img title="{$tsData.status.t}" class="status {$tsData.status.css} vctip" src="{$Sources->route('assets', 'images')}/space.gif"/>
+                <img title="{if $tsData.user_sexo == 1}Hombre{else}Mujer{/if}" src="{$Sources->route('assets', 'images')}/icons/{if $tsData.user_sexo == 0}fe{/if}male.png" class="vctip"/>
+                <img title="" style="padding:2px" src="{$Sources->route('assets', 'images')}/flags/{$tsData.user_pais|lower}.png" class="vctip"/>
+                <img title="{$tsData.stats.r_name}" src="{$Sources->route('assets', 'images')}/icons/ranks/{$tsData.stats.r_image}" class="vctip"/>
+                {if $tsData.p_sitio}<a href="{$tsData.p_sitio}" target="_blank"><img src="{$Sources->route('assets', 'images')}/icons/www.png" title="Sitio web" class="vctip"/></a>{/if}
+                {if $tsUser->uid != $tsData.user_id && $tsUser->is_member}<a onclick="mensaje.nuevo('{$tsData.user_name}','','','');return false" href="#"><img src="{$Sources->route('assets', 'images')}/icon-mensajes-recibidos.gif" title="Enviar mensaje privado" class="vctip"/></a>{/if}
+				{if $tsUser->is_admod == 1}<img title="Administrar" src="{$Sources->route('assets', 'images')}/icons/editar.png" style="width:14px;height:14px;cursor:pointer;" class="vctip" onclick="location.href = '{$tsConfig.url}/admin/users?act=show&amp;uid={$tsData.user_id}'"/>{/if}
 			</p>
         </div>
         <div class="description">

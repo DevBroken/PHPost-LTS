@@ -7,20 +7,20 @@
 			</li>
 		{/if}
 		<li class="tabbed {if $tsPage == 'posts' || $tsPage == 'home'}here{/if}">
-			<a title="Ir a Posts" href="{$tsConfig.url}/posts/">Posts <img alt="Drop Down" src="{$tsRoutes['tema']['images']}/arrowdown.png"></a>
+			<a title="Ir a Posts" href="{$tsConfig.url}/posts/">Posts <img alt="Drop Down" src="{$Sources->route('assets', 'images')}/arrowdown.png"></a>
 		</li>
 		{if $tsConfig.c_fotos_private != '1' && $tsUser->is_member}
 			<li class="tabbed {if $tsPage == 'fotos'}here{/if}">
-				<a title="Ir a Fotos" href="{$tsConfig.url}/fotos/">Fotos <img alt="Drop Down" src="{$tsRoutes['tema']['images']}/arrowdown.png"></a>
+				<a title="Ir a Fotos" href="{$tsConfig.url}/fotos/">Fotos <img alt="Drop Down" src="{$Sources->route('assets', 'images')}/arrowdown.png"></a>
 			</li>
 		{/if}
 		<li class="tabbed {if $tsPage == 'tops'}here{/if}">
-			<a title="Ir a TOPs" href="{$tsConfig.url}/top/">TOPs <img alt="Drop Down" src="{$tsRoutes['tema']['images']}/arrowdown.png"></a>
+			<a title="Ir a TOPs" href="{$tsConfig.url}/top/">TOPs <img alt="Drop Down" src="{$Sources->route('assets', 'images')}/arrowdown.png"></a>
 		</li>
 		{if $tsUser->is_member}
 			{if $tsUser->is_admod == 1}
 				<li class="tabbed {if $tsPage == 'admin'}here{/if}">
-					<a title="Panel de Administrador" href="{$tsConfig.url}/admin/">Administraci&oacute;n <img alt="Drop Down" src="{$tsRoutes['tema']['images']}/arrowdown.png"></a>
+					<a title="Panel de Administrador" href="{$tsConfig.url}/admin/">Administraci&oacute;n <img alt="Drop Down" src="{$Sources->route('assets', 'images')}/arrowdown.png"></a>
 				</li>
 			{/if}
 		{else}
@@ -57,7 +57,7 @@
 					</li>
 					{if $tsAvisos}
 						<li style="position:relative;">
-							<a title="Avisos" href="{$tsConfig.url}/mensajes/avisos/"><img src="{$tsRoutes['tema']['images']}/icons/megaphone.png" /></a>
+							<a title="Avisos" href="{$tsConfig.url}/mensajes/avisos/"><img src="{$Sources->route('assets', 'images')}/icons/megaphone.png" /></a>
 							<div id="alerta_avs" class="alertas" style="top: -6px;"><a title="{$tsAvisos} aviso{if $tsAvisos != 1}s{/if}"><span>{$tsAvisos}</span></a></div>
 						</li>
 					{/if}
@@ -85,11 +85,11 @@
 			<div class="identificarme">
 				<a title="Identificarme" href="{$tsConfig.url}/auth/login" class="iniciar_sesion">Identificarme</a>
 			</div>
-			<script src="{$tsRoutes['tema']['js']}/login.js?{$smarty.now}"></script>
+			<script src="{$Sources->assets('login.js')}?{$smarty.now}"></script>
 			<div id="login_box" style="display:;">
 				<div class="login_cuerpo">
 					<!-- Cerrar el login -->
-					<img title="Cerrar mensaje" onclick="close_login_box();" class="login_cerrar" src="{$tsRoutes['tema']['images']}/cross-button.png" style="left:220px">
+					<img title="Cerrar mensaje" onclick="close_login_box();" class="login_cerrar" src="{$Sources->route('assets', 'images')}/cross-button.png" style="left:220px">
 					<!-- Mensaje de error -->
 					<div id="login_error" style="display: none; padding:3px 0;margin-bottom: 8px;"></div>
 					<!-- Formulario para logue -->

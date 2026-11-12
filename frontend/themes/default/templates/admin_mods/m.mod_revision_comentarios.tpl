@@ -25,8 +25,8 @@
 											<td>{$c.c_date|hace:true}</td>                
    										    <td>{$c.c_ip}</td>
 											<td class="admin_actions">
-												<a href="#" onclick="ocultar_com({$c.cid}, {$c.c_user});"><img src="{$tsRoutes['tema']['images']}/icons/reboot.png" title="Reactivar/Ocultar Comentario" /></a>
-												<a href="#" onclick="borrar_com({$c.cid}, {$c.c_user}, {$c.post_id});"><img src="{$tsRoutes['tema']['images']}/icons/close.png" title="Eliminar comentario" /></a>
+												<a href="#" onclick="ocultar_com({$c.cid}, {$c.c_user});"><img src="{$Sources->route('assets', 'images')}/icons/reboot.png" title="Reactivar/Ocultar Comentario" /></a>
+												<a href="#" onclick="borrar_com({$c.cid}, {$c.c_user}, {$c.post_id});"><img src="{$Sources->route('assets', 'images')}/icons/close.png" title="Eliminar comentario" /></a>
 											</td>
 										</tr>
 										{/foreach}

@@ -37,7 +37,7 @@
                         <label class="form-label" for="password">Contraseña</label>
                         <input class="form-input" type="password" id="password" name="password" minlength="4" maxlength="32" placeholder="••••••••" autocomplete="new-password" required>
                         <div class="password-show">
-                            <img src="{$tsRoutes['assets']['images']}/icons/eye.svg" title="Mostrar contraseña">
+                            <img src="{$Sources->route('assets', 'images')}/icons/eye.svg" title="Mostrar contraseña">
                         </div>
                         <div class="password-strength-meter"><div id="strength-bar"></div></div>
                         <small class="form-helper" data-target="password"></small>

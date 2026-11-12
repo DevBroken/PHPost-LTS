@@ -3,9 +3,9 @@
                               <h3>Estad&iacute;sticas del usuario</h3>
                               <span>
                               {if $tsInfo.user_online}
-                              <span title="Online" style="float: left; width: 16px; height: 16px; background: url({$tsRoutes['tema']['images']}/big2v1.png); background-position: 0 -792px" class="dot-online-offline"></span>
+                              <span title="Online" style="float: left; width: 16px; height: 16px; background: url({$Sources->route('assets', 'images')}/big2v1.png); background-position: 0 -792px" class="dot-online-offline"></span>
                               {else}
-                              <span title="Offline" style="float: left; width: 16px; height: 16px; background: url({$tsRoutes['tema']['images']}/big2v1.png); background-position: 0 -814px" class="dot-online-offline"></span>
+                              <span title="Offline" style="float: left; width: 16px; height: 16px; background: url({$Sources->route('assets', 'images')}/big2v1.png); background-position: 0 -814px" class="dot-online-offline"></span>
                               </span>
                               {/if}
                             </div>
@@ -25,7 +25,7 @@
                             {if $tsGeneral.posts}
                             <ul class="ultimos">
                                 {foreach from=$tsGeneral.posts item=p}
-                            	<li class="categoriaPost" style="background-image:url({$tsRoutes['tema']['images']}/icons/cat/{$p.c_img})">
+                            	<li class="categoriaPost" style="background-image:url({$Sources->route('assets', 'images')}/icons/categories/{$p.c_img})">
                                     <a title="{$p.post_title}" target="_self" href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a>
                                     <span>{$p.post_puntos} Puntos</span>
                                 </li>
@@ -43,7 +43,7 @@
                             {if $tsGeneral.temas}
                             <ul class="ultimos">
                                 {foreach from=$tsGeneral.posts item=p}
-                            	<li class="categoriaPost" style="background-image:url({$tsRoutes['tema']['images']}/icons/cat/{$p.s_img})">
+                            	<li class="categoriaPost" style="background-image:url({$Sources->route('assets', 'images')}/icons/categories/{$p.s_img})">
                                     <a title="{$p.post_title}" target="_self" href="{$tsConfig.url}/posts/{$p.c_seo}/{$p.s_seo}/{$p.post_id}/{$p.post_slug}">{$p.post_title|truncate:45}</a>
                                     <span>{$p.post_puntos} Puntos</span>
                                 </li>

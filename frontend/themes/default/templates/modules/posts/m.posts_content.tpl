@@ -6,7 +6,7 @@
                             
 							<a title="Post Anterior (m&aacute;s viejo)" class="icons anterior" href="{$tsConfig.url}/posts/prev/{$tsPost.post_id}"></a>
                             
-							<a class="fortuitare" href="{$tsConfig.url}/posts/random/"><img class="qtip" title="Post aleatorio" src="{$tsRoutes['tema']['images']}/arrow-join.png"/></a>
+							<a class="fortuitare" href="{$tsConfig.url}/posts/random/"><img class="qtip" title="Post aleatorio" src="{$Sources->route('assets', 'images')}/arrow-join.png"/></a>
 							
 							<a title="Post Siguiente (m&aacute;s nuevo)" class="icons siguiente" href="{$tsConfig.url}/posts/next/{$tsPost.post_id}"></a>
                         
@@ -40,11 +40,11 @@
                                 
 								<a title="Borrar Post" onclick="borrar_post(); return false;" href="" class="btnActions">
                                     
-									<img alt="Borrar" src="{$tsRoutes['tema']['images']}/borrar.png"/> Borrar</a>
+									<img alt="Borrar" src="{$Sources->route('assets', 'images')}/borrar.png"/> Borrar</a>
                                 
 								<a title="Editar Post" onclick="location.href='{$tsConfig.url}/posts/editar/{$tsPost.post_id}'; return false" href="" class="btnActions">
                                     
-									<img alt="Editar" src="{$tsRoutes['tema']['images']}/editar.png"/> Editar</a>
+									<img alt="Editar" src="{$Sources->route('assets', 'images')}/editar.png"/> Editar</a>
                             </div>
                             
 							{elseif ($tsUser->is_admod && $tsPost.post_status == 0) || $tsUser->permisos.most || $tsUser->permisos.moayca || $tsUser->permisos.moop || $tsUser->permisos.moep || $tsUser->permisos.moedpo}

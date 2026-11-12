@@ -1,5 +1,4 @@
 {include "main_header.tpl"}
-<script src="{$tsRoutes['tema']['js']}/cuenta.js"></script>
 <script>
    $(document).ready(() => {
       avatar.uid = '{$tsUser->uid}';

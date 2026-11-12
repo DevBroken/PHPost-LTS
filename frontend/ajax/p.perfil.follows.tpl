@@ -13,7 +13,7 @@
         		</div>
         		<div class="txt">
         			<a href="{$tsConfig.url}/perfil/{$u.user_name}">{$u.user_name}</a><br>
-        			<img src="{$tsRoutes['tema']['images']}/flags/{$u.user_pais|lower}.png"/> <span class="grey">{$u.p_mensaje}</span>
+        			<img src="{$Sources->route('assets', 'images')}/flags/{$u.user_pais|lower}.png"/> <span class="grey">{$u.p_mensaje}</span>
         		</div>
         	</div>
         </li>

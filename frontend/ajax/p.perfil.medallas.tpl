@@ -9,7 +9,7 @@
         <li class="clearfix">
         	<div class="listado-content clearfix">
         		<div class="listado-avatar">
-        			<img src="{$tsRoutes['tema']['images']}/icons/med/{$m.m_image}_32.png" class="qtip" title="{$m.medal_date|hace:true}" width="32" height="32"/>
+        			<img src="{$Sources->route('assets', 'images')}/icons/medals/{$m.m_image}_32.png" class="qtip" title="{$m.medal_date|hace:true}" width="32" height="32"/>
 
         		</div>
         		<div class="txt">
