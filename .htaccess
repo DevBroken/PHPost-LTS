@@ -47,12 +47,12 @@ ServerSignature Off
 
     # Regla para assets (Mapea /assets/... a /frontend/assets/...)
     RewriteCond %{DOCUMENT_ROOT}/frontend/$1 -f
-    RewriteRule ^media/(assets/.+)$ frontend/$1 [L]
+    RewriteRule ^(assets/.+)$ frontend/$1 [L]
 
     # Regla para themes (Mapea /nombre_del_theme/... a /frontend/themes/nombre_del_theme/...)
     # Esta regla verifica si el archivo existe dentro de la carpeta frontend/themes/
     RewriteCond %{DOCUMENT_ROOT}/frontend/themes/$1 -f
-    RewriteRule ^media/([^/]+/.+)$ frontend/themes/$1 [L]
+    RewriteRule ^([^/]+/.+)$ frontend/themes/$1 [L]
 
     # Reglas heredadas del PHPost original reestructuradas de forma limpia
     RewriteRule ^$ index.php?do=home [QSA,L]
@@ -113,6 +113,7 @@ ServerSignature Off
 
     # AUTENTICACION & REGISTRO
     RewriteRule ^auth/([a-z]+)$ inc/php/auth.php?action=$1 [QSA,L]
+    RewriteRule ^auth/login-salir$ inc/ajax/index.php?action=$1 [QSA,L]
 
     # AJAX
     RewriteRule ^api/([A-Za-z0-9_-]+)$ inc/ajax/index.php?action=$1 [QSA,L]
