@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Misc;
+
 /**
  * @author PHPost Risus LTS
  * @copyright 2027

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Seguridad;
+
 /**
  * IP del cliente — PHPost Risus LTS
  * Portado de PHPost-subversion-v3 (src/Utils/Security/IP.php), sin cambios

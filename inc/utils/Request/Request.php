@@ -2,25 +2,23 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Request;
+
 /**
  * Petición HTTP — PHPost Risus LTS (reescrito)
- *
- * Cambios vs el legacy (inc/extras/QueryString.php):
- * - Sin magic_quotes (eliminado desde PHP 5.4; el código viejo aún lo chequeaba).
- * - NO muta $_GET/$_POST con htmlspecialchars: eso corrompía contraseñas
- *   ("a&b" llegaba como "a&amp;b") y rompía firmas binarias. Escapar se hace
- *   al usar el dato (Security::esc para SQL, Security::e al imprimir).
- * - Sin notices: todo acceso a $_SERVER con ??.
- * - El chequeo de referer solo aplica a páginas sensibles y tolera ausencia
- *   de referer (apps, fetch same-origin, CLI) en vez de morir siempre.
  */
 
 if (!defined('TS_HEADER')) {
     exit('No se permite el acceso directo al script');
 }
 
-if (!function_exists('cleanRequest')) {
-    function cleanRequest(): void
+final class Request
+{
+    /**
+     * Limpia y valida las variables globales de la petición entrante.
+     * Reemplaza a la antigua función global cleanRequest().
+     */
+    public static function clean(): void
     {
         global $tsPage;
 
@@ -56,48 +54,43 @@ if (!function_exists('cleanRequest')) {
         // Solo páginas sensibles exigen mismo origen, y solo si hay referer.
         $sensitive = ['admin', 'moderacion', 'cuenta'];
         $referer = $_SERVER['HTTP_REFERER'] ?? '';
-        if ($referer !== '' && in_array($tsPage ?? '', $sensitive, true) && !Request::isSameOrigin($referer)) {
+        if ($referer !== '' && in_array($tsPage ?? '', $sensitive, true) && !self::isSameOrigin($referer)) {
             http_response_code(403);
             exit('Invalid request origin.');
         }
     }
-}
 
-if (!class_exists('Request')) {
-    final class Request
+    /** ¿El referer pertenece a este mismo host? */
+    public static function isSameOrigin(string $referer): bool
     {
-        /** ¿El referer pertenece a este mismo host? */
-        public static function isSameOrigin(string $referer): bool
-        {
-            $refHost = strtolower(parse_url($referer, PHP_URL_HOST) ?? '');
-            $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
-            $host = (string) preg_replace('/:\d+$/', '', $host);
-            return $refHost !== '' && hash_equals($host, $refHost);
-        }
+        $refHost = strtolower(parse_url($referer, PHP_URL_HOST) ?? '');
+        $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
+        $host = (string) preg_replace('/:\d+$/', '', $host);
+        return $refHost !== '' && hash_equals($host, $refHost);
+    }
 
-        /** GET entero, sin excepciones. */
-        public static function get(string $key, string $default = ''): string
-        {
-            $v = $_GET[$key] ?? $default;
-            return is_string($v) ? $v : $default;
-        }
+    /** GET entero, sin excepciones. */
+    public static function get(string $key, string $default = ''): string
+    {
+        $v = $_GET[$key] ?? $default;
+        return is_string($v) ? $v : $default;
+    }
 
-        /** POST entero, sin excepciones. */
-        public static function post(string $key, string $default = ''): string
-        {
-            $v = $_POST[$key] ?? $default;
-            return is_string($v) ? $v : $default;
-        }
+    /** POST entero, sin excepciones. */
+    public static function post(string $key, string $default = ''): string
+    {
+        $v = $_POST[$key] ?? $default;
+        return is_string($v) ? $v : $default;
+    }
 
-        /** Entero de la petición (paginación, ids). */
-        public static function int(string $key, int $default = 0): int
-        {
-            return (int) ($_REQUEST[$key] ?? $default);
-        }
+    /** Entero de la petición (paginación, ids). */
+    public static function int(string $key, int $default = 0): int
+    {
+        return (int) ($_REQUEST[$key] ?? $default);
     }
 }
 
-// Alias legacy: el código viejo usa QueryString::...
-if (!class_exists('QueryString')) {
-    class_alias('Request', 'QueryString');
+// Alias legacy corregido: permite que el código viejo siga usando QueryString::...
+if (!class_exists('QueryString', false)) {
+    class_alias(Request::class, 'QueryString');
 }

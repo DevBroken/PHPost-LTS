@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Http;
+
+use InvalidArgumentException;
+use RuntimeException;
+
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
@@ -38,6 +43,7 @@ class HttpClient {
 
     /**
      * Motor interno unificado para la gestión de transferencias HTTP (DRY)
+     * Planeo dividirla, es muy larga
      */
     private static function request(string $method, string $url, array $data = [], int $timeout = 60): string {
         if (filter_var($url, FILTER_VALIDATE_URL) === false) {

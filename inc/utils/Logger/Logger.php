@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Logger;
+
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
@@ -115,7 +117,7 @@ class Logger {
      * Captura los errores nativos de PHP (como E_USER_DEPRECATED)
      */
     public function handlePhpError(int $errno, string $errstr, string $errfile, int $errline): bool {
-        global $config, $userLevel;
+        global $config, $userLevel; // ← Horrible, pero bueno...
 
         // Si el error fue silenciado con @, respetamos el operador y no hacemos nada
         if (!(error_reporting() & $errno)) {

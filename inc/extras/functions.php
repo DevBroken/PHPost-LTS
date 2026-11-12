@@ -9,7 +9,9 @@ declare(strict_types=1);
 
 defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
 
-require_once TS_UTILS . '/Database/Database.php';
+use DevBroken\Utils\Database\Database;
+
+#require_once TS_UTILS . '/Database/Database.php';
 $dbConfig = require_once TS_ROOT . '/config.inc.php';
 
 /**
@@ -105,6 +107,7 @@ function db_exec() {
                 'fetch_assoc'        => $db_instance->fetchAssoc($query),
                 'fetch_array'        => $db_instance->fetchArray($query),
                 'fetch_row'          => $db_instance->fetchRow($query),
+                'fetch_all'          => result_array($db_instance->query((string)$query)),
                 'insert_id'          => $db_instance->insertId(),
                 'begin_transaction'  => $db_instance->beginTransaction(),
                 'commit'             => $db_instance->commit(),

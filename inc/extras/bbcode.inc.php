@@ -16,6 +16,8 @@ require_once dirname(__DIR__, 1) . '/libs/JBBCode/validators/SizeValidator.php';
 require_once dirname(__DIR__, 1) . '/libs/JBBCode/validators/ImgValidator.php';
 require_once dirname(__DIR__, 1) . '/libs/JBBCode/validators/FontValidator.php';
 
+use DevBroken\Utils\Misc\Sources;
+
 /**
  * Clase responsable de la conversión de texto en formato
  * de marcado BBCode a XHTML para creración de contenido
@@ -44,10 +46,10 @@ class BBCode {
      */
     private object $parser;
 
-    protected tsCore $tsCore;
+    protected Sources $Sources;
 
-    public function __construct(tsCore $tsCore) {
-        $this->tsCore =$tsCore;
+    public function __construct(Sources $Sources) {
+        $this->Sources = $Sources;
         $this->restriction = [];
         $this->parser = new JBBCode\Parser();
     }
@@ -61,7 +63,7 @@ class BBCode {
      *
      * @param string $text  texto a parsear
      */
-    public function setText($text) {
+    public function setText(string $text) {
         $this->text = $text;
         $this->unclosedTags();
     }
@@ -69,11 +71,10 @@ class BBCode {
     /**
      * Modificar restricciones de BBCode
      *
-     * @param Array string $restriccion  lista de tags permitidos
+     * @param array $array  lista de tags permitidos
      */
-    public function setRestriction($array) {
+    public function setRestriction(array $array) {
         $this->restriction = $array;
-
         $this->addBBcodes();
     }
 
@@ -84,11 +85,8 @@ class BBCode {
      */
     public function getAsText() {
         $this->parser->parse($this->text);
-
         $this->text = $this->parser->getAsText();
-
         $this->delExtraTags();
-
         return htmlspecialchars_decode(strip_tags($this->text));
     }
 
@@ -99,11 +97,8 @@ class BBCode {
      */
     public function getAsHtml() {
         $this->parser->parse($this->text);
-
         $this->text = $this->parser->getAsHtml();
-
         $this->setExtraTags();
-
         return nl2br($this->text);
     }
 
@@ -185,7 +180,7 @@ class BBCode {
             array('tag' => 'ol', 'replace' => '<ol>{param}</ol>'),
             array('tag' => 'url', 'replace' => '<a href="{param}" target="_blank">{param}</a>', 'parse' => false, 'validParam' => $urlValidator),
             array('tag' => 'url', 'replace' => '<a href="{option}" target="_blank">{param}</a>', 'option' => true, 'validOption' => $urlValidator),
-            array('tag' => 'img', 'replace' => '<img src="{param}" onload="if(this.width > 735) {this.width=735}"/>', 'parse' => false, 'validParam' => $imgValidator),
+            array('tag' => 'img', 'replace' => '<img src="{param}" />', 'parse' => false, 'validParam' => $imgValidator),
             array('tag' => 'color', 'replace' => '<span style="color: {option}">{param}</span>', 'option' => true, 'validOption' => $colorValidator),
             array('tag' => 'size', 'replace' => '<span style="font-size: {option}pt; line-height: {option}pt">{param}</span>', 'option' => true, 'validOption' => $sizeValidator),
             array('tag' => 'align', 'replace' => '<div style="text-align: {option}">{param}</div>', 'option' => true, 'validOption' => $alignValidator),
@@ -229,25 +224,7 @@ class BBCode {
      */
     public function parseMentions() {
         global $tsUser;
-
-        $founds = array();
-
-        $this->text .= ' ';
-
-        preg_match_all('/\B@([a-zA-Z0-9_-]{4,16}+)\b/', $this->text, $users);
-
-        foreach ($users[1] as $user) {
-            if (!in_array($user, $founds)) {
-                $uid = $tsUser->getUserData(type: 'id', user: $user);
-                if (!empty($uid)) {
-                    $find = '@' . $user . ' ';
-                    $replace = '@<a href="' . $this->settings['url'] . '/perfil/' . $user . '" class="hovercard" uid="' . $uid . '">' . $user . '</a> ';
-                    $this->text = str_replace($find, $replace, $this->text);
-                }
-                $founds[] = $user;
-            }
-        }
-
+        $this->text = $tsUser->setMenciones($this->text);
         $this->text = substr($this->text, 0, -1);
     }
     
@@ -258,116 +235,121 @@ class BBCode {
      */
 	public function parseSmiles() {
 		// SMILEYS
-		$bbcode = array();
-		$html = array();
-        //
-        $pre = '<img src="'.$this->tsCore->getRoutes('tema:images').'/smiles/';
-        $end = '" align="absmiddle"/>';
-		// SMILES DEFAULT
-        $bbcode[] =":)"; $html[] = $pre."001.png".$end;
-        $bbcode[] =":D"; $html[] = $pre."002.png".$end;
-        $bbcode[] =";)"; $html[] = $pre."003.gif".$end;
-        $bbcode[] =":O"; $html[] = $pre."004.png".$end;
-        $bbcode[] ="(H)"; $html[] = $pre."006.png".$end;
-        $bbcode[] =":P"; $html[] = $pre."104.png".$end;
-        $bbcode[] ="8o|"; $html[] = $pre."049.png".$end;
-        $bbcode[] =":S"; $html[] = $pre."009.png".$end;
-        $bbcode[] =":$"; $html[] = $pre."008.png".$end;
-        $bbcode[] =":("; $html[] = $pre."010.png".$end;
-        $bbcode[] =":'("; $html[] = $pre."011.gif".$end;
-        $bbcode[] =":|"; $html[] = $pre."012.png".$end;
-        $bbcode[] ="(6)"; $html[] = $pre."013.png".$end;
-        $bbcode[] ="8-|"; $html[] = $pre."050.png".$end;
-        $bbcode[] =":-/"; $html[] = $pre."083.png".$end;
-        $bbcode[] ="^o)"; $html[] = $pre."051.png".$end;
-        // EXTRAS SMILES
-        $bbcode[] = "(A)"; $html[] = $pre."014.png".$end;
-        $bbcode[] = ":["; $html[] = $pre."043.png".$end;
-        $bbcode[] = ":-#"; $html[] = $pre."048.png".$end;
-        $bbcode[] = ":-*"; $html[] = $pre."052.png".$end;
-        $bbcode[] = "+o("; $html[] = $pre."053.png".$end;
-        $bbcode[] = "(brb)"; $html[] = $pre."066.gif".$end;
-        $bbcode[] = ":^)"; $html[] = $pre."072.gif".$end;
-        $bbcode[] = "*-)"; $html[] = $pre."073.gif".$end;
-        $bbcode[] = "<o)"; $html[] = $pre."075.gif".$end;
-        $bbcode[] = "8-)"; $html[] = $pre."076.gif".$end;
-        $bbcode[] = "|-)"; $html[] = $pre."078.gif".$end;
-        $bbcode[] =";-/"; $html[] = $pre."082.png".$end;
-        $bbcode[] ="(jk)"; $html[] = $pre."084.png".$end;
-        $bbcode[] = "(j)"; $html[] = $pre."086.png".$end;
-        $bbcode[] = "(V)"; $html[] = $pre."087.png".$end;
-        $bbcode[] = "(lol)"; $html[] = $pre."089.gif".$end;
-        $bbcode[] = "(xD)"; $html[] = $pre."090.png".$end;
-        $bbcode[] = ":8)"; $html[] = $pre."088.png".$end;
-        $bbcode[] = "(ff)"; $html[] = $pre."091.gif".$end;
-        $bbcode[] = "(fm)"; $html[] = $pre."092.gif".$end;
-        $bbcode[] = ":'|"; $html[] = $pre."093.gif".$end;
-        $bbcode[] = ":]"; $html[] = $pre."094.gif".$end;
-        $bbcode[] = ":}"; $html[] = $pre."095.png".$end;
-        $bbcode[] = "(BOO)"; $html[] = $pre."096.png".$end;
-        $bbcode[] = "*|"; $html[] = $pre."097.gif".$end;
-        $bbcode[] = "*\\"; $html[] = $pre."098.png".$end;
-        $bbcode[] = "(wm)"; $html[] = $pre."100.png".$end;
-        $bbcode[] = "(xo)"; $html[] = $pre."101.gif".$end;
-        // OBJECTOS
-        $bbcode[] = "(l)"; $html[] = $pre."015.png".$end;
-        $bbcode[] = "(u)"; $html[] = $pre."016.png".$end;
-        $bbcode[] = "(@)"; $html[] = $pre."018.png".$end;
-        $bbcode[] = "(&)"; $html[] = $pre."019.png".$end;
-        $bbcode[] = "(S)"; $html[] = $pre."020.png".$end;
-        $bbcode[] = "(*)"; $html[] = $pre."021.png".$end;
-        $bbcode[] = "(~)"; $html[] = $pre."022.png".$end;
-        $bbcode[] = "(8)"; $html[] = $pre."023.png".$end;
-        $bbcode[] = "(E)"; $html[] = $pre."024.png".$end;
-        $bbcode[] = "(F)"; $html[] = $pre."025.png".$end;
-        $bbcode[] = "(W)"; $html[] = $pre."026.png".$end;
-        $bbcode[] = "(O)"; $html[] = $pre."027.gif".$end;
-        $bbcode[] = "(K)"; $html[] = $pre."028.png".$end;
-        $bbcode[] = "(G)"; $html[] = $pre."029.png".$end;
-        $bbcode[] = "(^)"; $html[] = $pre."030.png".$end;
-        $bbcode[] = "(P)"; $html[] = $pre."031.png".$end;
-        $bbcode[] = "(I)"; $html[] = $pre."032.png".$end;
-        $bbcode[] = "(C)"; $html[] = $pre."033.png".$end;
-        $bbcode[] = "(T)"; $html[] = $pre."034.png".$end;
-        $bbcode[] = "({)"; $html[] = $pre."035.png".$end;
-        $bbcode[] = "(})"; $html[] = $pre."036.png".$end;
-        $bbcode[] = "(B)"; $html[] = $pre."037.png".$end;
-        $bbcode[] = "(D)"; $html[] = $pre."038.png".$end;
-        $bbcode[] = "(Z)"; $html[] = $pre."039.png".$end;
-        $bbcode[] = "(X)"; $html[] = $pre."040.png".$end;
-        $bbcode[] = "(Y)"; $html[] = $pre."041.png".$end;
-        $bbcode[] = "(N)"; $html[] = $pre."042.png".$end;
-        $bbcode[] = "(nnh)"; $html[] = $pre."044.png".$end;
-        $bbcode[] = "(#)"; $html[] = $pre."046.png".$end;
-        $bbcode[] = "(R)"; $html[] = $pre."047.png".$end;
-        $bbcode[] = "(sn)"; $html[] = $pre."054.png".$end;
-        $bbcode[] = "(tu)"; $html[] = $pre."055.png".$end;
-        $bbcode[] = "(pl)"; $html[] = $pre."056.png".$end;
-        $bbcode[] = "(||)"; $html[] = $pre."057.png".$end;
-        $bbcode[] = "(pi)"; $html[] = $pre."058.png".$end;
-        $bbcode[] = "(so)"; $html[] = $pre."059.png".$end;
-        $bbcode[] = "(au)"; $html[] = $pre."060.png".$end;
-        $bbcode[] = "(ap)"; $html[] = $pre."061.png".$end;
-        $bbcode[] = "(um)"; $html[] = $pre."062.png".$end;
-        $bbcode[] = "(ip)"; $html[] = $pre."063.png".$end;
-        $bbcode[] = "(co)"; $html[] = $pre."064.png".$end;
-        $bbcode[] = "(mp)"; $html[] = $pre."065.png".$end;
-        $bbcode[] = "(st)"; $html[] = $pre."067.png".$end;
-        $bbcode[] = "(pu)"; $html[] = $pre."102.png".$end;
-        $bbcode[] = "(yn)"; $html[] = $pre."068.png".$end;
-        $bbcode[] = "(h5)"; $html[] = $pre."069.gif".$end;
-        $bbcode[] = "(mo)"; $html[] = $pre."070.png".$end;
-        $bbcode[] = "(bah)"; $html[] = $pre."071.png".$end;
-        $bbcode[] = "(li)"; $html[] = $pre."074.gif".$end;
-        $bbcode[] = "(wo)"; $html[] = $pre."077.png".$end;
-        $bbcode[] = "'.'"; $html[] = $pre."080.png".$end;
-        $bbcode[] = "(bus)"; $html[] = $pre."045.png".$end;
-        $bbcode[] = "*p*"; $html[] = $pre."079.png".$end;
-        $bbcode[] ="*s*"; $html[] = $pre."085.png".$end;
-        $bbcode[] = "(M)"; $html[] = $pre."017.png".$end;
-        $bbcode[] = "(xx)"; $html[] = $pre."103.png".$end;
+		$bbcode = [];
+		$html = [];
+		$smiles = [
+            ":)" => "001.png",
+            ":D" => "002.png",
+            ";)" => "003.gif",
+            ":O" => "004.png",
+            "(H)" => "006.png",
+            ":P" => "104.png",
+            "8o|" => "049.png",
+            ":S" => "009.png",
+            ":$" => "008.png",
+            ":(" => "010.png",
+            ":'(" => "011.gif",
+            ":|" => "012.png",
+            "(6)" => "013.png",
+            "8-|" => "050.png",
+            ":-/" => "083.png",
+            "^o)" => "051.png",
+            "(A)" => "014.png",
+            ":[" => "043.png",
+            ":-#" => "048.png",
+            ":-*" => "052.png",
+            "+o(" => "053.png",
+            "(brb)" => "066.gif",
+            ":^)" => "072.gif",
+            "*-)" => "073.gif",
+            "<o)" => "075.gif",
+            "8-)" => "076.gif",
+            "|-)" => "078.gif",
+            ";-/" => "082.png",
+            "(jk)" => "084.png",
+            "(j)" => "086.png",
+            "(V)" => "087.png",
+            "(lol)" => "089.gif",
+            "(xD)" => "090.png",
+            ":8)" => "088.png",
+            "(ff)" => "091.gif",
+            "(fm)" => "092.gif",
+            ":'|" => "093.gif",
+            ":]" => "094.gif",
+            ":}" => "095.png",
+            "(BOO)" => "096.png",
+            "*|" => "097.gif",
+            "*\\" => "098.png",
+            "(wm)" => "100.png",
+            "(xo)" => "101.gif",
+            "(l)" => "015.png",
+            "(u)" => "016.png",
+            "(@)" => "018.png",
+            "(&)" => "019.png",
+            "(S)" => "020.png",
+            "(*)" => "021.png",
+            "(~)" => "022.png",
+            "(8)" => "023.png",
+            "(E)" => "024.png",
+            "(F)" => "025.png",
+            "(W)" => "026.png",
+            "(O)" => "027.gif",
+            "(K)" => "028.png",
+            "(G)" => "029.png",
+            "(^)" => "030.png",
+            "(P)" => "031.png",
+            "(I)" => "032.png",
+            "(C)" => "033.png",
+            "(T)" => "034.png",
+            "({)" => "035.png",
+            "(})" => "036.png",
+            "(B)" => "037.png",
+            "(D)" => "038.png",
+            "(Z)" => "039.png",
+            "(X)" => "040.png",
+            "(Y)" => "041.png",
+            "(N)" => "042.png",
+            "(nnh)" => "044.png",
+            "(#)" => "046.png",
+            "(R)" => "047.png",
+            "(sn)" => "054.png",
+            "(tu)" => "055.png",
+            "(pl)" => "056.png",
+            "(||)" => "057.png",
+            "(pi)" => "058.png",
+            "(so)" => "059.png",
+            "(au)" => "060.png",
+            "(ap)" => "061.png",
+            "(um)" => "062.png",
+            "(ip)" => "063.png",
+            "(co)" => "064.png",
+            "(mp)" => "065.png",
+            "(st)" => "067.png",
+            "(pu)" => "102.png",
+            "(yn)" => "068.png",
+            "(h5)" => "069.gif",
+            "(mo)" => "070.png",
+            "(bah)" => "071.png",
+            "(li)" => "074.gif",
+            "(wo)" => "077.png",
+            "'.'" => "080.png",
+            "(bus)" => "045.png",
+            "*p*" => "079.png",
+            "*s*" => "085.png",
+            "(M)" => "017.png",
+            "(xx)" => "103.png"
+        ];
+        foreach($smiles as $smile => $img) {
+            $i = str_replace('__smile__', $img, $this->Sources->route('assets', 'images'). '/smiles/__smile__');
+            $html[] = str_replace(
+                ["__url__", "__alt__"],
+                [$i, $smile],
+                '<img src="__url__" alt="__alt__" align="absmiddle" />'
+            );
+            $bbcode[] = $smile;
+        }
 
 		// REEMPLAZAMOS SMILEYS
         $this->text = str_replace($bbcode, $html, $this->text);
-	}    
+	}
 }

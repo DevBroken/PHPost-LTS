@@ -12,12 +12,18 @@ defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
 require_once TS_SOURCES . '/extensions/plugins/modifier.seo.php';
 require_once TS_EXTRA . '/bbcode.inc.php';
 
+use DevBroken\Utils\Http\{Http, HttpClient};
+use DevBroken\Utils\Logger\Logger;
+use DevBroken\Utils\Misc\Sources;
+use DevBroken\Utils\Paginator\Paginador;
+use DevBroken\Utils\Seguridad\IP;
+
 class tsCore {
 
 	protected Logger $Logger;
 	protected IP $IP;
+	protected ?Sources $Sources = null;
 	public array $settings = [];
-	public array $register = [];
 	public array $allows = [];
 
 	public function __construct(Logger $Logger, IP $IP) {
@@ -25,8 +31,22 @@ class tsCore {
 		$this->IP = $IP;
 		// La única configuraciones que importan
 		$this->settings = $this->getSettings();
-		$this->register = $this->setRegister();
 		$this->allows 	= $this->setAllows();
+	}
+
+	/**
+	 * Inyecta el resolutor de rutas de assets.
+	 *
+	 * No puede ir por el constructor: Sources depende de tsCore para leer
+	 * la configuración y el tema, así que el Container no puede resolver
+	 * ambas dependencias en cadena sin ciclo.
+	 *
+	 * @access public
+	 * @param Sources $Sources
+	 * @return void
+	 */
+	public function setSources(Sources $Sources): void {
+		$this->Sources = $Sources;
 	}
 
 	/**
@@ -45,44 +65,6 @@ class tsCore {
 
 	/**
 	 * @access public
-	 * @param string $path
-	 * @return string
-	 */
-	public function createRoute(string $path = ''): string {
-		return $this->settings['url'] . $path;
-	}
-
-	/**
-	 * @access public
-	 * @param string $path
-	 * @return string|array
-	 */
-	public function getRoutes(string $path = ''): string|array {
-		$media = $this->settings['url'] . '/media';
-		$tema 	= "{$media}/{$this->getTema('t_path')}";
-		$assets = "{$media}/assets";
-		// Creamos las rutas
-		$routes = [];
-		$routes['domain'] = $this->getDomain();
-		foreach(['tema','assets'] as $directory) {
-			foreach(['base','css','fonts','images','js'] as $subdirectory) {
-				$routes[$directory][$subdirectory] = ($subdirectory === 'base') ? $$directory : "{$$directory}/{$subdirectory}";
-			}
-		}
-		//
-		if(!empty($path)) {
-			$parts = explode(':', $path);
-			if(count($parts) === 1) {
-				return $routes[$parts[0]];
-			} else if(count($parts) > 1) {
-				return $routes[$parts[0]][$parts[1]];
-			}
-		}
-		return $routes;
-	}
-
-	/**
-	 * @access public
 	 * @return array
 	 */
 	public function getSettings(): array {
@@ -97,15 +79,6 @@ class tsCore {
 	public function setAllows(): array {
 		$allows = db_exec([__FILE__, __LINE__], 'query', "SELECT c_allow_sess_ip, c_allow_points, c_allow_sump, c_allow_firma, c_allow_upload, c_allow_portal, c_allow_live FROM w_configuracion WHERE tscript_id = :id LIMIT 1", ['id' => 1]);
 		return is_array($allows) ? $allows : [];
-	}
-
-	/**
-	 * @access public
-	 * @return array
-	 */
-	public function setRegister(): array {
-		$register = db_exec([__FILE__, __LINE__], 'query', "SELECT c_reg_active, c_reg_activate, c_reg_rango, c_met_welcome, c_message_welcome, c_allow_edad, pkey, skey FROM w_configuracion WHERE tscript_id = :id LIMIT 1", ['id' => 1]);
-		return is_array($register) ? $register : [];
 	}
 
 	/**
@@ -164,16 +137,16 @@ class tsCore {
 	 * @access public
 	 * @return array
 	 */
-   	public function getNews() {
-	  	$data = [];
+	public function getNews() {
+		$data = [];
 		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT not_body, not_color FROM w_noticias WHERE not_active = :active ORDER by RAND()', ['active' => 1]);
 		while($row = db_exec('fetch_assoc', $query)) {
 			$row['not_body'] = $this->setBBCode($row['not_body'], 'news');
-		 	$data[] = $row;
+			$data[] = $row;
 		}
-	  	//
-	  	return $data;
-   	}
+		//
+		return $data;
+	}
 
 	/**
 	 * @access public
@@ -189,7 +162,7 @@ class tsCore {
 		return '';
 	}
 
-   	/**
+	/**
 	 * @access public
 	 * @param string $badWords
 	 * @param bool $all
@@ -213,15 +186,26 @@ class tsCore {
 	/**
 	 * @deprecated Desde la versión PHPost LTS. Usar tsUser->setLevel() en su lugar.
 	*/
-	public function setLevel(int|string $tsLevel, bool $msg = false) {
+	public function setLevel(int|string $level) {
 		global $tsUser;
 		$this->Logger->deprecated('tsCore->setLevel','tsUser->setLevel');
 		// Por si viene con entero, obtendremos el string de ese valor
-		if(is_numeric($tsLevel)) {
+		if(is_numeric($level)) {
 			$niveles = [0 => 'todos', 1 => 'visitante', 2 => 'miembro', 3 => 'moderador', 4 => 'administrador'];
-			$tsLevel = $niveles[(int)$tsLevel];
+			$level = $niveles[(int)$level];
 		}
-		return $tsUser->setLevel($tsLevel, $msg);
+		return $tsUser->setLevel(
+			level: $level
+		);
+	}
+
+	/**
+	 * @deprecated Desde la versión PHPost LTS. Usar tsCore->navigate() en su lugar.
+	*/
+	public function redirectTo(string $tsDir = '/'): void {
+		$this->Logger->deprecated('tsCore->redirectTo','tsCore->navigate()');
+		// Mantenemos por compatibilidad
+		$this->navigate($tsDir);
 	}
 
 	/**
@@ -229,17 +213,19 @@ class tsCore {
 	 * @param string $tsDir
 	 * @return void
 	 */
-	public function redirectTo(string $tsDir = '/'): void {
-	    // Si es '/' o está vacío, redirigimos a la URL base de los settings
-	    if ($tsDir === '/' || trim($tsDir) === '') {
-	        $url = $this->settings['url'] ?? '/';
+	public function navigate(string $tsDir = '/'): void {
+		$baseUrl = rtrim($this->settings['url'] ?? '/', '/');
+		$tsDir = trim(urldecode($tsDir));
+		if ($tsDir === '/' || $tsDir === '') {
+	        $url = $baseUrl . '/';
 	    } else {
-	        // Decodificamos y limpiamos espacios o saltos de línea maliciosos
-	        $url = trim(urldecode($tsDir));
+	        // Aseguramos que la ruta empiece con una sola barra '/'
+	        $path = '/' . ltrim($tsDir, '/');
+	        $url = $baseUrl . $path;
 	    }
-	    // Enviamos la cabecera de redirección
-	    header("Location: " . $url);
-	    exit();
+		// Enviamos la cabecera de redirección
+		header("Location: " . $url);
+		exit();
 	}
 
 	/**
@@ -249,25 +235,25 @@ class tsCore {
 	 * @return string
 	 */
 	public function getDomain(): string {
-	    // Extraemos solo el host (ej. "://misitio.com" o "localhost")
-	    $host = parse_url($this->settings['url'] ?? '', PHP_URL_HOST);
-	    if (!$host) {
-	        return '';
-	    }
-	    // Lo picamos por sus puntos
-	    $parts = explode('.', $host);
-	    $count = count($parts);
-	    // Si no tiene puntos (ej. "localhost"), devolvemos el host tal cual
-	    if ($count < 2) {
-	        return $host;
-	    }
-	    // Soporte para extensiones dobles comunes (com.mx, co.uk, net.pe, org.es, etc.)
-	    $doubleTlds = ['com', 'net', 'org', 'co', 'gob', 'edu', 'mil'];
-	    if ($count > 2 && in_array($parts[$count - 2], $doubleTlds)) {
-	        return $parts[$count - 3] . '.' . $parts[$count - 2] . '.' . $parts[$count - 1];
-	    }
-	    // Caso estándar: devuelve "dominio.com" ignorando subdominios superiores
-	    return $parts[$count - 2] . '.' . $parts[$count - 1];
+		// Extraemos solo el host (ej. "://misitio.com" o "localhost")
+		$host = parse_url($this->settings['url'] ?? '', PHP_URL_HOST);
+		if (!$host) {
+			return '';
+		}
+		// Lo picamos por sus puntos
+		$parts = explode('.', $host);
+		$count = count($parts);
+		// Si no tiene puntos (ej. "localhost"), devolvemos el host tal cual
+		if ($count < 2) {
+			return $host;
+		}
+		// Soporte para extensiones dobles comunes (com.mx, co.uk, net.pe, org.es, etc.)
+		$doubleTlds = ['com', 'net', 'org', 'co', 'gob', 'edu', 'mil'];
+		if ($count > 2 && in_array($parts[$count - 2], $doubleTlds)) {
+			return $parts[$count - 3] . '.' . $parts[$count - 2] . '.' . $parts[$count - 1];
+		}
+		// Caso estándar: devuelve "dominio.com" ignorando subdominios superiores
+		return $parts[$count - 2] . '.' . $parts[$count - 1];
 	}
 
 	/**
@@ -278,14 +264,14 @@ class tsCore {
 	 * @return string
 	 */
 	public function currentUrl(bool $encode = false): string {
-	    // Capturamos el esquema de forma segura
-	    $scheme = Http::scheme();
-	    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-	    $uri = $_SERVER['REQUEST_URI'] ?? '/';
-	    // Armamos la URL completa
-	    $url = $scheme . '://' . $host . $uri;
-	    // Retornamos codificada o limpia según se solicite
-	    return $encode ? urlencode($url) : $url;
+		// Capturamos el esquema de forma segura
+		$scheme = Http::scheme();
+		$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+		$uri = $_SERVER['REQUEST_URI'] ?? '/';
+		// Armamos la URL completa
+		$url = $scheme . '://' . $host . $uri;
+		// Retornamos codificada o limpia según se solicite
+		return $encode ? urlencode($url) : $url;
 	}
 
 	/**
@@ -351,15 +337,17 @@ class tsCore {
 	 * @return string
 	 */
 	public function setSecure(string $var = '', bool $xss = false): string {
-	    // Eliminamos barras invertidas sobrantes si existen
-	    $var = stripslashes($var);
-	    // Escape seguro para SQL
-	    $var = db_exec('real_escape_string', $var);
-	    // Protección XSS moderna si se solicita
-	    if ($xss) {
-	        $var = htmlspecialchars($var, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-	    }
-	    return $var;
+		// Evitamos que este vacio
+		if(empty($var)) return '';
+		// Eliminamos barras invertidas sobrantes si existen
+		$var = stripslashes($var);
+		// Escape seguro para SQL
+		$var = db_exec('real_escape_string', $var);
+		// Protección XSS moderna si se solicita
+		if ($xss) {
+			$var = htmlspecialchars($var, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+		}
+		return $var;
 	}
 
 	/**
@@ -367,8 +355,8 @@ class tsCore {
 	*/
 	public function antiFlood(bool $print = true, string $type = 'post', string $msg = '', ?int $limit = null): true|string {
 		$this->Logger->deprecated('tsCore->antiFlood','tsUser->antiFlood()');
-	    global $tsUser;
-	    return $tsUser->antiFlood($print, $type, $msg, $limit);
+		global $tsUser;
+		return $tsUser->antiFlood($print, $type, $msg, $limit);
 	}
 
 	/**
@@ -390,7 +378,7 @@ class tsCore {
 	 */
 	public function setBBCode(string $bbcode = '', string $type = 'normal'): string {
 		// Inicializamos la clase
-		$parser = new BBCode($this);
+		$parser = new BBCode($this->Sources);
 		// Seleccionar texto
 		$parser->setText($bbcode);
 		// Cargamos los botones
@@ -461,24 +449,6 @@ class tsCore {
 		return HttpClient::get($tsUrl);
 	}
 
-	# Función para comprobar reCaptcha v3
-	public function reCaptcha(string $publico = '') {
-	   // call curl to POST request
-	   $http = http_build_query([
-		'secret' => $this->settings["skey"],
-		'response' => $publico,
-		'remoteip' => $this->getIP()
-	   ]);
-	   $init = curl_init();
-	  curl_setopt($init, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
-	  curl_setopt($init, CURLOPT_POST, 1);
-	  curl_setopt($init, CURLOPT_POSTFIELDS, $http);
-	  curl_setopt($init, CURLOPT_RETURNTRANSFER, true);
-	  $response = curl_exec($init);
-	  curl_close($init);
-	  return json_decode($response, true);
-	}
-
 	/**
 	 * @deprecated Desde la versión PHPost LTS. Usar IP::getIP() en su lugar.
 	*/
@@ -498,20 +468,17 @@ class tsCore {
 	 * @return string
 	 */
 	public function getIUP(array $array = [], string $prefix = ''): string {
-	    $sets = [];
-	    // Recorremos llave y valor directamente sin duplicar el array en memoria
-	    foreach ($array as $field => $val) {
-	        // Si es estrictamente un entero o un flotante, lo dejamos limpio, si no, lo tratamos como string seguro
-	        if (is_int($val) || is_float($val)) {
-	            $va_ = $val;
-	        } else {
-	            // Pasamos TODO lo demás por seguridad y le ponemos comillas fijas
-	            $safeVal = $this->setSecure((string)$val);
-	            $va_ = "'{$safeVal}'";
-	        }
-	        $sets[] = $prefix . $field . " = " . $va_;
-	    }
-	    return implode(', ', $sets);
+		$sets = [];
+		foreach ($array as $field => $val) {
+			if (is_int($val) || is_float($val)) {
+				$va_ = $val;
+			} else {
+				$safeVal = $this->setSecure((string)$val);
+				$va_ = "'{$safeVal}'";
+			}
+			$sets[] = $prefix . $field . " = " . $va_;
+		}
+		return implode(', ', $sets);
 	}
 
 }

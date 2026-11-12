@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Http;
+
+use DevBroken\Utils\Seguridad\IP;
+
 /**
  * Utilidad HTTP/IP — PHPost Risus LTS
  *
@@ -14,16 +18,23 @@ if (!defined('TS_HEADER')) {
     exit('No se permite el acceso directo al script');
 }
 
-if (!class_exists('IP')) {
-    require_once __DIR__ . '/../seguridad/ip.php';
-}
-
 final class Http
 {
+
+    private static ?IP $ipInstance = null;
+
+    private static function extractIP(): IP
+    {
+        if (self::$ipInstance === null) {
+            self::$ipInstance = new IP();
+        }
+        return self::$ipInstance;
+    }
+
     /**
      * IP del cliente.
      * OJO: confía en cabeceras de proxy. Úsalo solo si estás detrás de un
-     * proxy/CDN de confianza; si no, usa (new IP())->getIPHuman().
+     * proxy/CDN de confianza; si no, usa self::extractIP()->getIPHuman().
      */
     public static function clientIp(): string
     {
@@ -47,7 +58,7 @@ final class Http
         if ($ip === null || $ip === '') {
             return null;
         }
-        return (new IP())->ipToBinary($ip);
+        return self::extractIP()->ipToBinary($ip);
     }
 
     /** Binario -> string legible (delega en IP, la canónica). */
@@ -56,7 +67,7 @@ final class Http
         if ($bin === null || $bin === '') {
             return '';
         }
-        return (new IP())->binaryToIp($bin) ?? '';
+        return self::extractIP()->binaryToIp($bin) ?? '';
     }
 
     public static function isSecure(): bool
@@ -68,7 +79,8 @@ final class Http
 
     public static function isLocal(): bool
     {
-        $host = $_SERVER['HTTP_HOST'] ?? '';
+        /*$host = $_SERVER['HTTP_HOST'] ?? '';*/
+        $host = strtolower(explode(':', $_SERVER['HTTP_HOST'] ?? '')[0]);
         return in_array($host, ['localhost', '127.0.0.1', '::1'], true)
             || str_ends_with($host, '.local')
             || str_ends_with($host, '.test');
@@ -85,9 +97,10 @@ final class Http
         return $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/');
     }
 
-    public static function redirect(string $url): void
+    public static function redirect(string $url, int $statusCode = 302): never
     {
-        header('Location: ' . $url);
+        $clean = str_replace(["\r", "\n"], '', $url);
+        header('Location: ' . $clean, true, $statusCode);
         exit;
     }
 }

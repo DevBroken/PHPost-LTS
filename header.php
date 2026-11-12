@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 defined('TS_HEADER') OR define('TS_HEADER', TRUE);
 
+require_once __DIR__ . '/autoload.php';
 require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/inc/libs/autoload.php';
 
@@ -21,19 +22,12 @@ require_once __DIR__ . '/inc/libs/autoload.php';
 require_once TS_EXTRA . '/functions.php';
 
 // Constantes
-require_once TS_UTILS . '/Misc/Constants.php';
+use DevBroken\Utils\Misc\Constants;
 // Utilidades centrales por dominio
 // De momento estaran aquí, luego lo moveré
-require_once TS_UTILS . '/Http/Http.php';
-require_once TS_UTILS . '/Http/HttpClient.php';
-require_once TS_UTILS . '/Http/Response.php';
-require_once TS_UTILS . '/Logger/Logger.php';
-require_once TS_UTILS . '/Misc/Container.php';
-require_once TS_UTILS . '/Paginator/Paginador.php';
-require_once TS_UTILS . '/Password/Password.php';
-require_once TS_UTILS . '/Request/Request.php';
-require_once TS_UTILS . '/Seguridad/IP.php';
-require_once TS_UTILS . '/Seguridad/Security.php';
+use DevBroken\Utils\Misc\{Container, Sources};
+use DevBroken\Utils\Logger\Logger;
+use DevBroken\Utils\Request\Request;
 
 // Nucleo
 require_once TS_CLASS . '/c.core.php';
@@ -51,13 +45,14 @@ require_once TS_CLASS . '/c.visitas.php';
  * -------------------------------------------------------------------
  */
 
-cleanRequest();
+Request::clean();
 $container = new Container;
 
 $Logger = $container->get(Logger::class);
-set_error_handler([$Logger, 'handlePhpError'], E_USER_DEPRECATED);
+$Sources = $container->get(Sources::class);
 
 $tsCore        = $container->get(tsCore::class);
+$tsCore->setSources($Sources);
 $tsUser        = $container->get(tsUser::class);
 $tsMonitor 	   = $container->get(tsMonitor::class);
 $tsActividad   = $container->get(tsActividad::class);
@@ -68,6 +63,8 @@ $tsEmail       = $container->get(tsEmail::class);
 
 // Definimos el template a utilizar
 define('TS_TEMA', $tsCore->settings['tema']['t_path'] ?? 'default');
+//
+set_error_handler([$Logger, 'handlePhpError'], E_USER_DEPRECATED);
 
 /*
  * -------------------------------------------------------------------
@@ -77,12 +74,13 @@ define('TS_TEMA', $tsCore->settings['tema']['t_path'] ?? 'default');
 // Configuraciones
 $smarty->assign('tsConfig', $tsCore->settings);
 $smarty->assign('tsAllows', $tsCore->allows);
-$smarty->assign('tsRoutes', $tsCore->getRoutes());
+$smarty->assign('tsNoveMods', $tsCore->getNovemods());
 $smarty->assign('tsCategorias', $tsCore->getCategorias());
 $smarty->assign('tsUser', $tsUser);
 $smarty->assign('tsAvisos', $tsMonitor->avisos);
 $smarty->assign('tsNots', $tsMonitor->notificaciones);
 $smarty->assign('tsMPs', $tsMP->mensajes);
+$smarty->assign('Sources', $Sources);
 
 /**
  * Si hay alguna IP bloqueada por el Moderador/Administrador,

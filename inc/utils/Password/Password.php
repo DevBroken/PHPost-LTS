@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Password;
+
+use RuntimeException;
+
 /**
  * Utilidad de contraseñas — PHPost Risus LTS
  *

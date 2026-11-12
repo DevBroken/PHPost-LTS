@@ -2,18 +2,16 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Misc;
+
+use DevBroken\Utils\Seguridad\IP;
+
 /**
  * reCAPTCHA clásico (public key + secret key) — PHPost Risus LTS
  *
  * Solo Google reCAPTCHA v2/v3: envía el token al siteverify y listo.
  * Sin enterprise, sin hCaptcha.
  *
- * @example
- * $rc = ReCaptcha::fromCore($tsCore); // pkey/skey de w_configuracion
- * if ($rc->verify($_POST['response'] ?? '') !== true) {
- *     die('Validación incorrecta');
- * }
- * // en el form: <?= $rc->widgetHtml() ?>
  */
 
 if (!defined('TS_HEADER')) {
@@ -33,15 +31,6 @@ final class ReCaptcha
         $this->secretKey = $secretKey;
         $this->siteKey = $siteKey;
         $this->userIp = $this->detectIp();
-    }
-
-    /** Atajo con las claves de este proyecto (w_configuracion pkey/skey). */
-    public static function fromCore(tsCore $core): self
-    {
-        return new self(
-            (string) ($core->settings['skey'] ?? ''),
-            (string) ($core->settings['pkey'] ?? '')
-        );
     }
 
     private function detectIp(): string

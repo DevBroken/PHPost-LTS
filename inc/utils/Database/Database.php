@@ -2,6 +2,14 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Database;
+
+use mysqli;
+use mysqli_result;
+use mysqli_stmt;
+use InvalidArgumentException;
+use RuntimeException;
+
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
@@ -36,6 +44,15 @@ class Database {
         }
 
         $this->connection->set_charset("utf8mb4");
+    }
+
+    /**
+     * Cerrar automáticamente la conexión al finalizar el ciclo de vida del objeto
+     */
+    public function __destruct() {
+        if ($this->connection instanceof mysqli) {
+            $this->connection->close();
+        }
     }
 
     public function getConnection(): mysqli {

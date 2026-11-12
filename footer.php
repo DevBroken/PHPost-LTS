@@ -14,6 +14,6 @@ $smarty->assign("tsPage", $tsPage);
 $usePrefix = isset($usePrefix) ? $usePrefix : true;
 
 $smarty->templateError = "t.error404.tpl";
-$smarty->setTheme();
+$smarty->setTheme($tsCore->getTema('t_path'));
 $smarty->setPage($tsPage);
 $smarty->load($usePrefix);

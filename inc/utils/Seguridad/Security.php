@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Seguridad;
+
 /**
  * Utilidad de seguridad — PHPost Risus LTS
  *

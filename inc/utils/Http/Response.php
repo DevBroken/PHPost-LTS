@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Smarty\Compile\Tag\FunctionTag;
+namespace DevBroken\Utils\Http;
 
 /**
  * @author PHPost Risus LTS
@@ -14,6 +14,7 @@ if (!defined('TS_HEADER')) {
 }
 
 class Response {
+
     /**
      * Convierte el formato clásico de texto plano a una estructura de array.
      */

@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+namespace DevBroken\Utils\Misc;
+
+use ReflectionClass;
+use Exception;
+
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
