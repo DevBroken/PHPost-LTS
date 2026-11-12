@@ -13,9 +13,9 @@
 
 	$tsPage = "portal";	// tsPage.tpl -> PLANTILLA PARA MOSTRAR CON ESTE ARCHIVO.
 
-	$tsLevel = 0;		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
+	$tsLevel = 'todos';		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
 
-	$tsAjax = empty($_GET['ajax']) ? 0 : 1; // LA RESPUESTA SERA AJAX?
+	$tsAjax = !isset($_GET['ajax']); // LA RESPUESTA SERA AJAX?
 	
 	$tsContinue = true;	// CONTINUAR EL SCRIPT
 	
@@ -26,10 +26,12 @@
 /*++++++++ = ++++++++*/
 
 	// VERIFICAMOS EL NIVEL DE ACCSESO ANTES CONFIGURADO
-	$tsLevelMsg = $tsCore->setLevel($tsLevel, true);
-	if($tsLevelMsg != 1){	
+	$tsLevelMsg = $tsUser->setLevel(
+		level: $tsLevel
+	);
+	if($tsLevelMsg > 1) {
 		$tsPage = 'aviso';
-		$tsAjax = 0;
+		# ya no usa $tsAjax = 0
 		$smarty->assign("tsAviso",$tsLevelMsg);
 		//
 		$tsContinue = false;
@@ -44,7 +46,7 @@
 
 \*********************************/
     // PORTAL
-    include(TS_CLASS."c.portal.php");
+    include(TS_CLASS."/c.portal.php");
     $tsPortal = new tsPortal();
     // AFILIADOS
     include("inc/class/c.afiliado.php");

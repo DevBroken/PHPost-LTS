@@ -13,25 +13,27 @@
 
 	$tsPage = "moderacion";	// tsPage.tpl -> PLANTILLA PARA MOSTRAR CON ESTE ARCHIVO.
 
-	$tsLevel = 3;		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
+	$tsLevel = 'moderador';		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
 
-	$tsAjax = empty($_GET['ajax']) ? 0 : 1; // LA RESPUESTA SERA AJAX?
+	$tsAjax = !isset($_GET['ajax']); // LA RESPUESTA SERA AJAX?
 	
 	$tsContinue = true;	// CONTINUAR EL SCRIPT
 	
 /*++++++++ = ++++++++*/
 
-	include "../../header.php"; // INCLUIR EL HEADER
+	require_once dirname(__DIR__, 2) . "/header.php"; // INCLUIR EL HEADER
 
 	$tsTitle = $tsCore->settings['titulo'].' - '.$tsCore->settings['slogan']; 	// TITULO DE LA PAGINA ACTUAL
 
 /*++++++++ = ++++++++*/
 
 	// VERIFICAMOS EL NIVEL DE ACCSESO ANTES CONFIGURADO
-	$tsLevelMsg = $tsCore->setLevel($tsLevel, true);
-	if($tsLevelMsg != 1){	
+	$tsLevelMsg = $tsUser->setLevel(
+		level: $tsLevel
+	);
+	if($tsLevelMsg > 1) {
 		$tsPage = 'aviso';
-		$tsAjax = 0;
+		# ya no usa $tsAjax = 0
 		$smarty->assign("tsAviso",$tsLevelMsg);
 		//
 		$tsContinue = false;
@@ -105,7 +107,7 @@
    elseif($action == 'buscador') {
 		$smarty->assign("plantilla", "mod_buscador");
 		if($_POST['buscar']) {
-			$tsCore->redirectTo($tsCore->settings['url'].'/moderacion/buscador/'.$_POST['m'].'/'.$_POST['t'].'/'.$_POST['texto']);
+			$tsCore->navigate('/moderacion/buscador/'.$_POST['m'].'/'.$_POST['t'].'/'.$_POST['texto']);
 		}	
 		if($act == 'search') $smarty->assign("tsContenido", $tsMod->getContenido()); 
 
@@ -130,6 +132,6 @@ if(empty($tsAjax)) {	// SI LA PETICION SE HIZO POR AJAX DETENER EL SCRIPT Y NO M
 	$smarty->assign("tsSave",$_GET['save']);	// AGREGAR EL TITULO DE LA PAGINA ACTUAL
 	
 	/*++++++++ = ++++++++*/
-	include("../../footer.php");
+	require_once TS_ROOT . '/footer.php';
 	/*++++++++ = ++++++++*/
 }

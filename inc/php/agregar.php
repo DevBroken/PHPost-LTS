@@ -1,82 +1,61 @@
-<?php 
+<?php
+
+declare(strict_types=1);
+
 /**
- * Controlador
- *
- * @name    agregar.php
- * @author  PHPost Team
-*/
+ * @author PHPost Risus LTS
+ * @copyright 2027
+ */
 
-/**********************************\
+$tsPage = "agregar";
 
-*	(VARIABLES POR DEFAULT)		*
+$tsLevel = 'miembro';
 
-\*********************************/
+$tsAjax = !isset($_GET['ajax']);
 
-	$tsPage = "agregar";	// tsPage.tpl -> PLANTILLA PARA MOSTRAR CON ESTE ARCHIVO.
+$tsContinue = true;
 
-	$tsLevel = 2;		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
+require_once dirname(__DIR__, 2) . "/header.php"; // INCLUIR EL HEADER
 
-	$tsAjax = empty($_GET['ajax']) ? 0 : 1; // LA RESPUESTA SERA AJAX?
-	
-	$tsContinue = true;	// CONTINUAR EL SCRIPT
-	
-/*++++++++ = ++++++++*/
+$tsTitle = $tsCore->settings['titulo'].' - '.$tsCore->settings['slogan']; 	// TITULO DE LA PAGINA ACTUAL
 
-	include "../../header.php"; // INCLUIR EL HEADER
+// Nivel y permisos de acceso
+$tsLevelMsg = $tsUser->setLevel(
+		level: $tsLevel
+	);
+if($tsLevelMsg > 1) {
+	$tsPage = 'aviso';
+	$tsContinue = false;
+	$smarty->assign("tsAviso", $tsLevelMsg);
+}
 
-	$tsTitle = $tsCore->settings['titulo'].' - '.$tsCore->settings['slogan']; 	// TITULO DE LA PAGINA ACTUAL
+if($tsContinue) {
 
-/*++++++++ = ++++++++*/
-	
-	// VERIFICAMOS EL NIVEL DE ACCSESO ANTES CONFIGURADO
-	$tsLevelMsg = $tsCore->setLevel($tsLevel, true);
-	if($tsLevelMsg != 1){	
-		$tsPage = 'aviso';
-		$tsAjax = 0;
-		$smarty->assign("tsAviso",$tsLevelMsg);
+	$action = trim($_GET['action'] ?? '');
+
+	if(is_numeric($action)) {
+		require_once TS_CLASS . '/c.borradores.php';
+		$tsDrafts = $container->get(tsDrafts::class);
+		$smarty->assign("tsDraft", $tsDrafts->getDraft());
 		//
-		$tsContinue = false;
-	}
-	//
-	if($tsContinue){
-/**********************************\
-
-* (VARIABLES LOCALES ESTE ARCHIVO)	*
-
-\*********************************/
-
-	$action = $_GET['action'];
-
-/**********************************\
-
-*	(INSTRUCCIONES DE CODIGO)		*
-
-\*********************************/
-
-	if(is_numeric($action)){
-		//
-		include("../class/c.borradores.php");
-		$tsDrafts = new tsDrafts();
-		$tsBorrador = $tsDrafts->getDraft();
-		$smarty->assign("tsDraft",$tsBorrador);
-		//
-	} elseif($action == 'editar'){
+	} elseif($action === 'editar') {
 		// CLASE
-		include("../class/c.posts.php");
-		$tsPosts = new tsPosts();
+		require_once TS_CLASS . '/c.posts.php';
+		$tsPosts = $container->get(tsPosts::class);
+
 		// GUARDAR
-		if(!empty($_POST['titulo'])){
+		if(!empty($_POST['titulo'])) {
 		  $post_save = $tsPosts->savePost();
 			if($post_save == 1) {
 				$tsPost = (int)$_GET['pid'];
 				$tsCat = (int)$_POST['categoria'];
-				$query = db_exec(array(__FILE__, __LINE__), 'query', "SELECT c.c_seo FROM p_categorias AS c WHERE c.cid = $tsCat LIMIT 1");
+				$query = db_exec([__FILE__, __LINE__], 'query', "SELECT c.c_seo FROM p_categorias AS c WHERE c.cid = $tsCat LIMIT 1");
 				$tsCat = db_exec('fetch_assoc', $query);
 				
 				//
-				$post_url = "{$tsCore->settings['url']}/posts/{$tsCat['c_seo']}/$tsPost/{$tsCore->setSEO($_POST['titulo'])}.html";
+				$post_url = "/posts/{$tsCat['c_seo']}/$tsPost/{$tsCore->setSEO($_POST['titulo'])}.html";
 				// NOS VAMOS AL POST
-				$tsCore->redirectTo($post_url);
+				$tsCore->navigate($post_url);
 			} else {
                 $tsPage = 'aviso';
                 $smarty->assign("tsAviso",array('titulo' => 'Oops!', 'mensaje' => $post_save, 'but' => 'Volver', 'link' => 'javascript:history.go(-1)'));
@@ -93,18 +72,18 @@
 		$smarty->assign("tsAction",$_GET['action']);
 		$smarty->assign("tsPid",$_GET['pid']);
 		
-	}elseif($_POST['titulo']){
+	} elseif($_POST['titulo']) {
 		// CLASE
-		include("../class/c.posts.php");
-		$tsPosts = new tsPosts();
+		require_once TS_CLASS . '/c.posts.php';
+		$tsPosts = $container->get(tsPosts::class);
 		//
 		$tsPost = $tsPosts->newPost();
 		//
 		$tsPage = 'aviso';
-		$tsAjax = 0;
+		# ya no usa $tsAjax = 0
 		if($tsPost > 0) {
 			$tsCat = (int)$_POST['categoria'];
-			$query = db_exec(array(__FILE__, __LINE__), 'query', "SELECT c.c_seo FROM p_categorias AS c WHERE c.cid = $tsCat LIMIT 1");
+			$query = db_exec([__FILE__, __LINE__], 'query', "SELECT c.c_seo FROM p_categorias AS c WHERE c.cid = $tsCat LIMIT 1");
 			$tsCat = db_exec('fetch_assoc', $query);
 			
 			//
@@ -116,19 +95,13 @@
 		}
 	}
 	
-/**********************************\
+}
 
-* (AGREGAR DATOS GENERADOS | SMARTY) *
-
-\*********************************/
-	}
-
-if(empty($tsAjax)) {	// SI LA PETICION SE HIZO POR AJAX DETENER EL SCRIPT Y NO MOSTRAR PLANTILLA, SI NO ENTONCES MOSTRARLA.
-
-	$smarty->assign("tsTitle",$tsTitle);	// AGREGAR EL TITULO DE LA PAGINA ACTUAL
+if($tsAjax)
+{
+	// Asignamos título
+	$smarty->assign("tsTitle",$tsTitle);
 	$smarty->assign("tsSubmenu","agregar");
-
-	/*++++++++ = ++++++++*/
-	include("../../footer.php");
-	/*++++++++ = ++++++++*/
+	// Incluir footer
+	require_once TS_ROOT . "/footer.php";
 }

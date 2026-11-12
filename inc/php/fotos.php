@@ -13,15 +13,15 @@
 
 	$tsPage = "fotos";	// tsPage.tpl -> PLANTILLA PARA MOSTRAR CON ESTE ARCHIVO.
 
-	$tsLevel = 2;		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
+	$tsLevel = 'miembro';		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
 
-	$tsAjax = empty($_GET['ajax']) ? 0 : 1; // LA RESPUESTA SERA AJAX?
+	$tsAjax = !isset($_GET['ajax']); // LA RESPUESTA SERA AJAX?
 	
 	$tsContinue = true;	// CONTINUAR EL SCRIPT
 	
 /*++++++++ = ++++++++*/
 
-	include "../../header.php"; // INCLUIR EL HEADER
+	require_once dirname(__DIR__, 2) . "/header.php"; // INCLUIR EL HEADER
 
 	$tsTitle = $tsCore->settings['titulo'].' - '.$tsCore->settings['slogan']; 	// TITULO DE LA PAGINA ACTUAL
 
@@ -29,15 +29,17 @@
 	// PARA LAS FOTOS...
     $action = htmlspecialchars($_GET['action']);		
 	if($tsCore->settings['c_fotos_private'] == '0') {	
-    if($action == '' || $action == 'ver') $tsLevel = 0;		
+    if($action == '' || $action == 'ver') $tsLevel = 'todos';
 	}else{		
-	$tsLevel = 2;		
+	$tsLevel = 'miembro';
 	}
 	// VERIFICAMOS EL NIVEL DE ACCSESO ANTES CONFIGURADO
-	$tsLevelMsg = $tsCore->setLevel($tsLevel, true);
-	if($tsLevelMsg != 1){	
+	$tsLevelMsg = $tsUser->setLevel(
+		level: $tsLevel
+	);
+	if($tsLevelMsg > 1) {
 		$tsPage = 'aviso';
-		$tsAjax = 0;
+		# ya no usa $tsAjax = 0
 		$smarty->assign("tsAviso",$tsLevelMsg);
 		//
 		$tsContinue = false;
@@ -63,7 +65,7 @@
         case '':
             $smarty->assign("tsLastFotos", $tsFotos->getLastFotos());
             $smarty->assign("tsLastComments", $tsFotos->getLastComments());
-			$q = db_exec('fetch_assoc', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT stats_miembros, stats_fotos, stats_foto_comments FROM w_stats WHERE stats_no = \'1\''));
+			$q = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', 'SELECT stats_miembros, stats_fotos, stats_foto_comments FROM w_stats WHERE stats_no = \'1\''));
             $smarty->assign("tsStats", $q);
             
         break;
@@ -103,7 +105,7 @@
             // TITULO
             $tsTitle = $tsFoto['foto']['f_title'].' - '.$tsFoto['foto']['user_name'].' - '.$tsCore->settings['titulo'];
 			
-			if($tsFoto['foto']['f_status'] == 1 && (!$tsUser->is_admod && $tsUser->permisos['moacp'] == false)) {
+			if($tsFoto['foto']['f_status'] == 0 && (!$tsUser->is_admod && $tsUser->permisos['moacp'] == false)) {
 			$tsPage = 'aviso';
             $smarty->assign("tsAviso",array('titulo' => 'Opps...', 'mensaje' => 'Esta foto se encuentra en revisi&oacute;n por acumulaci&oacute;n de denuncias', 'but' => 'Ir a Fotos', 'link' => "{$tsCore->settings['url']}/fotos/"));
 			}elseif($tsFoto['foto']['exist'] == 0){
@@ -121,7 +123,7 @@
 		break;
         case 'album':
             $username = $_GET['user'];
-            $user_id = $tsUser->getUserID($username);
+            $user_id = $tsUser->getUserData(type: 'id', user: $username);
             if(empty($user_id)){
                 $tsPage = 'aviso';
                 $smarty->assign("tsAviso",array('titulo' => 'Opps...', 'mensaje' => 'Este usuario no existe.', 'but' => 'Ir a Fotos', 'link' => "{$tsCore->settings['url']}/fotos/"));
@@ -148,6 +150,6 @@ if(empty($tsAjax)) {	// SI LA PETICION SE HIZO POR AJAX DETENER EL SCRIPT Y NO M
 	$smarty->assign("tsTitle",$tsTitle);	// AGREGAR EL TITULO DE LA PAGINA ACTUAL
 
 	/*++++++++ = ++++++++*/
-	include("../../footer.php");
+	require_once TS_ROOT . '/footer.php';
 	/*++++++++ = ++++++++*/
 }

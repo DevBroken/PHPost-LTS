@@ -13,25 +13,27 @@
 
 	$tsPage = "usuarios";	// tsPage.tpl -> PLANTILLA PARA MOSTRAR CON ESTE ARCHIVO.
 
-	$tsLevel = 0;		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
+	$tsLevel = 'todos';		// NIVEL DE ACCESO A ESTA PAGINA. => VER FAQs
 
-	$tsAjax = empty($_GET['ajax']) ? 0 : 1; // LA RESPUESTA SERA AJAX?
+	$tsAjax = !isset($_GET['ajax']); // LA RESPUESTA SERA AJAX?
 	
 	$tsContinue = true;	// CONTINUAR EL SCRIPT
 	
 /*++++++++ = ++++++++*/
 
-	include "../../header.php"; // INCLUIR EL HEADER
+	require_once dirname(__DIR__, 2) . "/header.php"; // INCLUIR EL HEADER
 
 	$tsTitle = $tsCore->settings['titulo'].' - '.$tsCore->settings['slogan']; 	// TITULO DE LA PAGINA ACTUAL
 
 /*++++++++ = ++++++++*/
 
 	// VERIFICAMOS EL NIVEL DE ACCSESO ANTES CONFIGURADO
-	$tsLevelMsg = $tsCore->setLevel($tsLevel, true);
-	if($tsLevelMsg != 1){	
+	$tsLevelMsg = $tsUser->setLevel(
+		level: $tsLevel
+	);
+	if($tsLevelMsg > 1) {
 		$tsPage = 'aviso';
-		$tsAjax = 0;
+		# ya no usa $tsAjax = 0
 		$smarty->assign("tsAviso",$tsLevelMsg);
 		//
 		$tsContinue = false;
@@ -53,7 +55,7 @@
 
 \*********************************/
     // PAICES
-    include("../ext/datos.php");
+    require_once TS_EXTRA . "/paises.php";
     $smarty->assign("tsPaises",$tsPaises);
     // USUARIOS
     $tsUsers = $tsUser->getUsuarios();
@@ -63,7 +65,7 @@
     // FILTROS
     $smarty->assign("tsFiltro",array('online' => $_GET['online'], 'avatar' => $_GET['avatar'], 'sex' => $_GET['sexo'], 'pais' => $_GET['pais'], 'rango' => $_GET['rango']));
     // RANGOS
-	$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT rango_id, r_name FROM u_rangos ORDER BY rango_id');
+	$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT rango_id, r_name FROM u_rangos ORDER BY rango_id');
     $smarty->assign("tsRangos",result_array($query));
     
 
@@ -79,6 +81,6 @@ if(empty($tsAjax)) {	// SI LA PETICION SE HIZO POR AJAX DETENER EL SCRIPT Y NO M
 	$smarty->assign("tsTitle",$tsTitle);	// AGREGAR EL TITULO DE LA PAGINA ACTUAL
 
 	/*++++++++ = ++++++++*/
-	include("../../footer.php");
+	require_once TS_ROOT . '/footer.php';
 	/*++++++++ = ++++++++*/
 }

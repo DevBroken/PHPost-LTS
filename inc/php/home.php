@@ -7,6 +7,8 @@ declare(strict_types=1);
  * @copyright 2027
  */
 
+use DevBroken\Utils\Paginator\Paginador;
+
 $tsPage = "home";
 
 $tsLevel = 'todo';
