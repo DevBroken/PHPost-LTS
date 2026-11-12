@@ -1,10 +1,14 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
 /**
- * Modelo para el control del portal/mi
- *
- * @name    c.portal.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
+
 class tsPortal{
 
 	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*\
@@ -17,7 +21,7 @@ class tsPortal{
      */
      public function getNews(){
         // MURO
-        include(TS_CLASS."c.muro.php");
+        include(TS_CLASS."/c.muro.php");
         $tsMuro = new tsMuro();
         return $tsMuro->getNews(0);
      }
@@ -34,7 +38,7 @@ class tsPortal{
         $cat_ids = serialize($cat_ids);
         //
 
-        if(db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE `u_portal` SET `last_posts_cats` = \''.$tsCore->setSecure($cat_ids).'\' WHERE `user_id` = \''.$tsUser->uid.'\'')) return '1: Tus cambios fueron aplicados.';
+        if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE `u_portal` SET `last_posts_cats` = \''.$tsCore->setSecure($cat_ids).'\' WHERE `user_id` = \''.$tsUser->uid.'\'')) return '1: Tus cambios fueron aplicados.';
         else return '0: Int&eacute;ntalo mas tarde.';
      }
      /** composeCategories()
@@ -45,7 +49,7 @@ class tsPortal{
      public function composeCategories(){
         global $tsCore, $tsUser;
         //
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `last_posts_cats` FROM `u_portal` WHERE `user_id` = \''.$tsUser->uid.'\'');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT `last_posts_cats` FROM `u_portal` WHERE `user_id` = \''.$tsUser->uid.'\'');
         $data = db_exec('fetch_assoc', $query);
         
         //
@@ -66,7 +70,7 @@ class tsPortal{
      public function getMyPosts(){
         global $tsCore, $tsUser;
         //
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `last_posts_cats` FROM `u_portal` WHERE `user_id` = \''.$tsUser->uid.'\'');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT `last_posts_cats` FROM `u_portal` WHERE `user_id` = \''.$tsUser->uid.'\'');
         $data = db_exec('fetch_assoc', $query);
         
         //
@@ -75,7 +79,7 @@ class tsPortal{
             $cat_ids = implode(',',$cat_ids);
             $where = "p.post_category IN ({$cat_ids})";
             //
-            $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(p.post_id) AS total FROM p_posts AS p WHERE p.post_status = \'0\' AND '.$where.'');
+            $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(p.post_id) AS total FROM p_posts AS p WHERE p.post_status = \'1\' AND '.$where.'');
             $total = db_exec('fetch_assoc', $query);
             
             //
@@ -83,7 +87,7 @@ class tsPortal{
                 $pages = $tsCore->getPagination($total['total'], 20);
             else return false;
             //
-            $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p.post_id, p.post_category, p.post_title, p.post_date, p.post_puntos, p.post_private, u.user_name, c.c_nombre, c.c_seo, c.c_img FROM p_posts AS p LEFT JOIN u_miembros AS u ON p.post_user = u.user_id LEFT JOIN p_categorias AS c ON c.cid = p.post_category WHERE p.post_status = \'0\' AND '.$where.' ORDER BY p.post_id DESC LIMIT '.$pages['limit'].'');
+            $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT p.post_id, p.post_category, p.post_title, p.post_date, p.post_puntos, p.post_private, u.user_name, c.c_nombre, c.c_seo, c.c_img FROM p_posts AS p LEFT JOIN u_miembros AS u ON p.post_user = u.user_id LEFT JOIN p_categorias AS c ON c.cid = p.post_category WHERE p.post_status = \'1\' AND '.$where.' ORDER BY p.post_id DESC LIMIT '.$pages['limit'].'');
             $posts['data'] = result_array($query);
             
             //
@@ -100,14 +104,14 @@ class tsPortal{
 	function getLastPosts($type = 'visited'){
 		global $tsUser;
         //
-       $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `last_posts_'.$type.'` FROM `u_portal` WHERE `user_id` = \''.$tsUser->uid.'\' LIMIT 1');
+       $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT `last_posts_'.$type.'` FROM `u_portal` WHERE `user_id` = \''.$tsUser->uid.'\' LIMIT 1');
         $dato = db_exec('fetch_assoc', $query);
         
         $visited = unserialize($dato['last_posts_'.$type]);
         krsort($visited);
 		// LO HAGO ASI PARA ORDENAR SIN NECESITAR OTRA VARIABLE
         foreach($visited as $key => $id){
-            $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p.post_id, p.post_user, p.post_category, p.post_title, p.post_date, p.post_puntos, p.post_private, u.user_name, c.c_nombre, c.c_seo, c.c_img FROM p_posts AS p LEFT JOIN u_miembros AS u ON p.post_user = u.user_id LEFT JOIN p_categorias AS c ON c.cid = p.post_category WHERE p.post_status = 0 AND p.post_id = '.$id.' LIMIT 1');
+            $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT p.post_id, p.post_user, p.post_category, p.post_title, p.post_date, p.post_puntos, p.post_private, u.user_name, c.c_nombre, c.c_seo, c.c_img FROM p_posts AS p LEFT JOIN u_miembros AS u ON p.post_user = u.user_id LEFT JOIN p_categorias AS c ON c.cid = p.post_category WHERE p.post_status = 1 AND p.post_id = '.$id.' LIMIT 1');
             $data[] = db_exec('fetch_assoc', $query);
             
         }
@@ -122,14 +126,14 @@ class tsPortal{
      public function getFavorites(){
         global $tsCore, $tsUser;
         //
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(fav_id) AS total FROM `p_favoritos` WHERE `fav_user` = \''.$tsUser->uid.'\'');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(fav_id) AS total FROM `p_favoritos` WHERE `fav_user` = \''.$tsUser->uid.'\'');
         $total = db_exec('fetch_assoc', $query);
         
         if($total['total'] > 0)
             $pages = $tsCore->getPagination($total['total'], 20);
         else return false;
         //
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT f.fav_id, f.fav_date, p.post_id, p.post_title, p.post_date, p.post_puntos, p.post_category, p.post_private, COUNT(p_c.c_post_id) as post_comments,  c.c_nombre, c.c_seo, c.c_img FROM p_favoritos AS f LEFT JOIN p_posts AS p ON p.post_id = f.fav_post_id LEFT JOIN p_categorias AS c ON c.cid = p.post_category LEFT JOIN p_comentarios AS p_c ON p.post_id = p_c.c_post_id && p_c.c_status = \'0\' WHERE f.fav_user = \''.$tsUser->uid.'\' && p.post_status = \'0\' GROUP BY c_post_id ORDER BY f.fav_date DESC LIMIT '.$pages['limit']);
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT f.fav_id, f.fav_date, p.post_id, p.post_title, p.post_date, p.post_puntos, p.post_category, p.post_private, COUNT(p_c.c_post_id) as post_comments,  c.c_nombre, c.c_seo, c.c_img FROM p_favoritos AS f LEFT JOIN p_posts AS p ON p.post_id = f.fav_post_id LEFT JOIN p_categorias AS c ON c.cid = p.post_category LEFT JOIN p_comentarios AS p_c ON p.post_id = p_c.c_post_id && p_c.c_status = \'1\' WHERE f.fav_user = \''.$tsUser->uid.'\' && p.post_status = \'1\' GROUP BY c_post_id ORDER BY f.fav_date DESC LIMIT '.$pages['limit']);
 		$data['data'] = result_array($query);
 		
         //
@@ -144,7 +148,7 @@ class tsPortal{
      */
      public function getFotos(){
         // FOTOS
-    	include(TS_CLASS."c.fotos.php");
+    	include(TS_CLASS."/c.fotos.php");
     	$tsFotos = new tsFotos();
         return $tsFotos->getLastFotos();
      }
@@ -155,7 +159,7 @@ class tsPortal{
      */
      public function getStats(){
     	// CLASE TOPS
-    	include(TS_CLASS."c.tops.php");
+    	include(TS_CLASS."/c.tops.php");
     	$tsTops = new tsTops();
         return $tsTops->getStats();
      }
