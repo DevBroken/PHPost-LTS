@@ -7,7 +7,7 @@ const ir_a_categoria = (categoria) => {
 	} else if(categoria !== 'base' || categoria !== 'posts') {
 		redirect += `/c/${categoria}`;
 	}
-	location.href = redirect;
+	window.location.href = redirect;
 }
 
 const PARAM_KEY_MAP = Object.freeze({
@@ -419,11 +419,7 @@ var mensaje = {
 		mydialog.show(true);
 		mydialog.title('Nuevo mensaje');
 		mydialog.body(this.form());
-		mydialog.buttons(true, true, 'Enviar', '$(\'.wysibb-texarea\').sync(); mensaje.enviar(0)', true, true, true, 'Cancelar', 'close', true, false);
-		$('#msg_body').wysibb({
-			resize_maxheight: 170,
-			buttons: "smilebox,|,bold,italic,underline,strike,sup,sub,|,img,video,link,|,removeFormat"
-		});
+		mydialog.buttons(true, true, 'Enviar', 'mensaje.enviar(0)', true, true, true, 'Cancelar', 'close', true, false);
 		mydialog.center();
 	},
 	// ENVIAR...
@@ -458,7 +454,6 @@ var mensaje = {
 		//
 		this.ajax('respuesta','id=' + this.vars['mp_id'] + '&body=' + this.vars['mp_body'], function(h){
 			$('#respuesta').val(''); // LIMPIAMOS
-			$('.wysibb-body').html('');
 			switch(h.charAt(0)){
 				case '0':
 					mydialog.alert("Error", h.substring(3));
@@ -548,10 +543,22 @@ var news = {
 
 // READY
 $(document).ready(() => {
-	$('body').on('click', e => {
-		if ($('#mon_list').css('display') != 'none' && $(e.target).closest('#mon_list').length == 0 && $(e.target).closest('a[name=Monitor]').length == 0) notifica.last();
-		if ($('#mp_list').css('display') != 'none' && $(e.target).closest('#mp_list').length == 0 && $(e.target).closest('a[name=Mensajes]').length == 0) mensaje.last();
-	});
+
+    const modulos = [
+        { $el: $('#mon_list'), disparador: 'a[name="Monitor"]',  accion: () => notifica.last() },
+        { $el: $('#mp_list'),  disparador: 'a[name="Mensajes"]', accion: () => mensaje.last() }
+    ];
+
+    $('body').on('click', (e) => {
+        const target = e.target;
+        for (const { $el, disparador, accion } of modulos) {
+            if ($el.is(':visible')) {
+                const clicDentroLista = target.closest(`#${$el.attr('id')}`);
+                const clicDentroBoton = target.closest(disparador);
+                if (!clicDentroLista && !clicDentroBoton) accion();
+            }
+        }
+    });
 
 	/* NOTICIAS */
 	news.total = $('#top_news > li').length;

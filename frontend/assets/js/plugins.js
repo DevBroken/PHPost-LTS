@@ -470,6 +470,3 @@ const formValid = (name, message, status = true) => {
     helper.classList.toggle('success', status);
     helper.classList.toggle('danger', !status);
 }
-
-// Autoejecución al cargar el DOM
-document.addEventListener('DOMContentLoaded', () => LazyLoadLTS.init('.lazy'));

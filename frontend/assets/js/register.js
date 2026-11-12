@@ -226,7 +226,7 @@ $(document).ready(() => {
         const isPassword = $input.attr('type') === 'password';
         $input.attr('type', isPassword ? 'text' : 'password');
         // Cambiamos el icono
-        const iconBase = `${global_data.url}/media/assets/images/icons`;
+        const iconBase = `${global_data.url}/assets/images/icons`;
         $img.attr('src', `${iconBase}/${isPassword ? 'eye-closed.svg' : 'eye.svg'}`);
         // Opcional: Mejoramos la accesibilidad del botón en tiempo real
         $button.attr('title', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña');

@@ -181,9 +181,7 @@ function add_favoritos(){
 /* Wysibb para los comentarios */
 function dejar_un_comentario(){
    //Editor de posts comentarios
-   if($('#body_comm').length && !$('.wysibb-texarea').length){
-      $('#body_comm').removeAttr('onblur onfocus class style title').css('height', '80').html('').wysibb({ buttons: "smilebox,|,bold,italic,underline,strike,sup,sub,|,img,video,link" });
-   }
+
 }
 /* extras */
 function emoticones(){ 
