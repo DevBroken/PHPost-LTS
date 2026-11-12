@@ -1,80 +1,61 @@
 <?php
+
+declare(strict_types=1);
+
 /**
- * Smarty plugin
- * @package Smarty
- * @subpackage plugins
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
 
-
 /**
- * Smarty cat modifier plugin
+ * Smarty hace modifier plugin
  *
- * Type:     modifier<br>
- * Name:     hace<br>
- * Date:     Feb 24, 2010
- * Purpose:  catenate a value to a variable
- * Input:    string to catenate
- * Example:  {$var|cat:"foo"}
- * @link http://smarty.php.net/manual/en/language.modifier.cat.php cat
- *          (Smarty online manual)
- * @author   Ivan Molina Pavana
- * @version 1.0
- * @param string
- * @param string
+ * Tipo:     modifier
+ * Nombre:   hace
+ * Propósito: Muestra el tiempo transcurrido de forma legible y elegante.
+ *
+ * @param mixed $fecha Timestamp numérico o string asegurable.
+ * @param bool $show Parámetro opcional heredado.
  * @return string
  */
-function smarty_modifier_hace($fecha, $show = false){
-     
-    $ahora = time();
-    $tiempo = $ahora - $fecha; 
-    //
-    $dias = round($tiempo / 86400);
-    // HOY
-    if($dias <= 0) {
-        // HACE MENOS DE 1 HORA
-        if(round($tiempo / 3600) <= 0){ 
-            // HACE MENOS DE 1 MINUTO
-            if(round($tiempo / 60) <= 0){ 
-                if($tiempo <= 60){ $hace = "Hace unos segundos"; }
-            // HACE X MINUTOS 
-            } else  { 
-            	$can = round($tiempo / 60); 
-            	if($can <= 1) {    $word = "minuto"; } else { $word = "minutos"; } 
-            	$hace = 'Hace '.$can. " ".$word; 
-            }
-        // HACE X HORAS
-        } else { 
-            $can = round($tiempo / 3600); 
-            if($can <= 1) {    $word = "hora"; } else {    $word = "horas"; } 
-            $hace = 'Hace '.$can. " ".$word; 
-        }    
-    }
-    // MENOS DE 7 DIAS
-    else if($dias <= 30){
-        // AYER
-        if($dias < 2){
-            $hace = 'Ayer';
-        // HACE MENOS DE 5 DIAS
-        } else {
-            $hace = 'Hace '.$dias.' d&iacute;as';
-        }
-    // HACE MAS DE UNA SEMANA
-    } else{
-        $meses = round($tiempo / 2592000);
-        if($meses == 1) $hace = 'M&aacute;s de 1 mes';
-        elseif($meses < 12) {
-            $hace = 'M&aacute;s de '.$meses.' meses';
-        } else {
-            $anos = round($tiempo / 31536000);
-            if($anos == 1) $hace = 'M&aacute;s de un a&ntilde;o';
-            else $hace = 'M&aacute;s de '.$anos.' a&ntilde;os';
-        }
-    }
-    //
-    return $hace;
+function smarty_modifier_hace(mixed $fecha, ?bool $show = false): string
+{
+    $fechaInt = is_numeric($fecha) ? (int) $fecha : strtotime((string) $fecha);
 
+    if (!$fechaInt) {
+        return 'Fecha inválida';
+    }
+
+    $tiempo = time() - $fechaInt;
+
+    if ($tiempo < 0) {
+        return 'En el futuro';
+    }
+
+    if ($tiempo < 60) {
+        return 'Hace unos segundos';
+    }
+
+    // Definición formal de intervalos temporales en segundos
+    $intervalos = [
+        31536000 => ['año', 'años', 'Más de un año', 'Más de %d años'],
+        2592000  => ['mes', 'meses', 'Más de 1 mes', 'Más de %d meses'],
+        86400    => ['día', 'días', 'Ayer', 'Hace %d días'],
+        3600     => ['hora', 'horas', 'Hace 1 hora', 'Hace %d horas'],
+        60       => ['minuto', 'minutos', 'Hace 1 minuto', 'Hace %d minutos'],
+    ];
+
+    foreach ($intervalos as $segundos => [$singular, $plural, $textoSingular, $textoPlural]) {
+        $cantidad = intdiv($tiempo, $segundos);
+        if ($cantidad === 0) {
+            continue;
+        }
+        // Caso especial para días (Ayer) u otras etiquetas fijas singulares
+        if ($cantidad === 1) {
+            return $textoSingular;
+        }
+        return sprintf($textoPlural, $cantidad);
+    }
+
+    return 'Hace unos segundos';
 }
-
-/* vim: set expandtab: */
-
-?>

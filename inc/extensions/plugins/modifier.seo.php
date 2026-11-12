@@ -3,42 +3,54 @@
 declare(strict_types=1);
 
 /**
- * Smarty plugin: Modifier SEO
- * @author 		Miguel92
- * @copyright 	2027
- *
- * @param string $text
- * @param array $options
- * @return string
+ * @author Miguel92 & PHPost Risus LTS
+ * @copyright 2027
  */
 
-function smarty_modifier_seo(string $text, array $options = []): string {
-	// Configuración por defecto
-	$defaults = [
-		'lowercase' => true,	// true: todo minúsculas | false: mantiene mayúsculas
-		'separator' => '-',		// Separador de palabras ('-' o '_')
-		'max_length'=> null,	// Límite de caracteres (null para desactivar)
-	];
-	// Fusionar opciones del usuario con las por defecto
-	$opts = array_merge($defaults, $options);
-	$sep  = preg_quote($opts['separator'], '~');
-	// Transliteración de alto rendimiento (á -> a, ñ -> n, Cyrillic -> Latin, etc.)
-	$string = transliterator_transliterate('Any-Latin; Latin-ASCII;', $text);
-	// Control de mayúsculas/minúsculas
-	if ($opts['lowercase']) {
-		$string = mb_strtolower($string, 'UTF-8');
-	}
-	// Limpiar caracteres no deseados (mantiene letras, números, espacios y el separador)
-	// El flag 'i' de la regex se activa solo si no se forzó minúsculas
-	$regex_case = $opts['lowercase'] ? '' : 'i';
-	$string = preg_replace('~[^a-z0-9\s' . $sep . ']+~' . $regex_case, '', $string);
-	// Unificar espacios y separadores repetidos en uno solo
-	$string = preg_replace('~[\s' . $sep . ']+~', $opts['separator'], $string);
-	$string = trim($string, $opts['separator']);
-	// Recorte opcional por longitud máxima
-	if ($opts['max_length'] !== null && mb_strlen($string, 'UTF-8') > $opts['max_length']) {
-		$string = mb_substr($string, 0, $opts['max_length'], 'UTF-8');
-		$string = rtrim($string, $opts['separator']);
-	}
-	return $string;
+/**
+ * Smarty seo modifier plugin
+ *
+ * Tipo:     modifier
+ * Nombre:   seo
+ * Propósito: Genera slugs amigables (URLs limpias) optimizadas para SEO.
+ * Ejemplo:  {$slug|seo:['max_length' => 50]}
+ *
+ * @param string $text Texto a transformar en slug.
+ * @param array{lowercase?: bool, separator?: string, max_length?: ?int} $options Opciones de configuración.
+ * @return string
+ */
+function smarty_modifier_seo(string $text, array $options = []): string
+{
+    // Aplicar valores por defecto de manera eficiente (PHP 7.4+)
+    $options['lowercase'] ??= true;
+    $options['separator'] ??= '-';
+    $options['max_length'] ??= null;
+
+    // Transliteración de alto rendimiento (á -> a, ñ -> n, Cyrillic -> Latin, etc.)
+    $string = transliterator_transliterate('Any-Latin; Latin-ASCII;', $text);
+
+    if ($string === false) {
+        return '';
+    }
+
+    if ($options['lowercase']) {
+        $string = mb_strtolower($string, 'UTF-8');
+    }
+
+    // Escapar el separador para la expresión regular
+    $sep = preg_quote($options['separator'], '~');
+    $regexCase = $options['lowercase'] ? '' : 'i';
+
+    // Combinamos limpieza de caracteres especiales y unificación de espacios/separadores
+    $string = preg_replace('~[^a-z0-9\s' . $sep . ']+~' . $regexCase, '', $string) ?? '';
+    $string = preg_replace('~[\s' . $sep . ']+~', $options['separator'], $string) ?? '';
+    $string = trim($string, $options['separator']);
+
+    // Recorte inteligente de longitud máxima
+    if ($options['max_length'] !== null && mb_strlen($string, 'UTF-8') > $options['max_length']) {
+        $string = mb_substr($string, 0, $options['max_length'], 'UTF-8');
+        $string = rtrim($string, $options['separator']);
+    }
+
+    return $string;
 }
