@@ -1,10 +1,14 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
 /**
- * Modelo para el control del monitor de usuario
- *
- * @name    c.monitor.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
+
 class tsMonitor {
 	/**
      * @name notificaciones 
@@ -39,7 +43,7 @@ class tsMonitor {
 		// VISITANTE?
 		if(empty($tsUser->is_member)) return false;
 		// NOTIFICACIONES
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(not_id) AS total FROM u_monitor WHERE user_id = \''.$tsUser->uid.'\' AND not_menubar > 0');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(not_id) AS total FROM u_monitor WHERE user_id = \''.$tsUser->uid.'\' AND not_menubar > 0');
 		$data = db_exec('fetch_assoc', $query);
 		
 		//
@@ -47,7 +51,7 @@ class tsMonitor {
         /**
          * AVISOS
         */ 
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(av_id) AS total FROM u_avisos WHERE user_id = \''.$tsUser->uid.'\' AND av_read = \'0\'');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(av_id) AS total FROM u_avisos WHERE user_id = \''.$tsUser->uid.'\' AND av_read = \'0\'');
 		$data = db_exec('fetch_assoc', $query);
 		
         $this->avisos = $data['total'];
@@ -90,13 +94,13 @@ class tsMonitor {
     function setAviso($user_id = NULL, $subject = '(sin asunto)', $body = NULL, $type = 0){
 	global $tsCore;
         # VERIFICAMOS QUE SE PUEDA ENVIAR EL AVISO
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT user_baneado FROM u_miembros WHERE user_id = \''.(int)$user_id.'\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT user_baneado FROM u_miembros WHERE user_id = \''.(int)$user_id.'\' LIMIT 1');
         $data = db_exec('fetch_assoc', $query);
         
         # NO PODEMOS ENVIAR A UN USUARIO BANEADO
         if($data['user_baneado'] == 1) return true;
         # INSERTAMOS EL AVISO
-		if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_avisos (user_id, av_subject, av_body, av_date, av_type) VALUES (\''.(int)$user_id.'\', \''.$tsCore->setSecure($subject).'\', \''.$tsCore->setSecure($body).'\', \''.time().'\', \''.$type.'\' )')) return true;
+		if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_avisos (user_id, av_subject, av_body, av_date, av_type) VALUES (\''.(int)$user_id.'\', \''.$tsCore->setSecure($subject).'\', \''.$tsCore->setSecure($body).'\', \''.time().'\', \''.$type.'\' )')) return true;
         else return false;
     }
     /**
@@ -110,7 +114,7 @@ class tsMonitor {
         # GLOBALES
         global $tsUser;
         # OBTENERMOS
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT * FROM u_avisos WHERE user_id = \''.$tsUser->uid.'\'');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM u_avisos WHERE user_id = \''.$tsUser->uid.'\'');
 		$data = result_array($query);
 		
         # RETURN
@@ -127,13 +131,13 @@ class tsMonitor {
         # GLOBALES
         global $tsUser;
         # OBTENEMOS
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT * FROM u_avisos WHERE av_id = \''.(int)$av_id.'\'');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM u_avisos WHERE av_id = \''.(int)$av_id.'\'');
 		$data = db_exec('fetch_assoc', $query);
 		
         # RETURN
         if(empty($data['av_id']) || $data['user_id'] != $tsUser->uid && !$tsUser->is_admod == 1) return 'El aviso no existe';
         else {
-		    db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_avisos SET av_read = 1 WHERE av_id = \''.(int)$av_id.'\'');
+		    db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_avisos SET av_read = 1 WHERE av_id = \''.(int)$av_id.'\'');
             $this->avisos = $this->avisos - 1;
             return $data;   
         }
@@ -149,13 +153,13 @@ class tsMonitor {
         # GLOBALES
         global $tsUser;
         # OBTENEMOS
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT user_id FROM u_avisos WHERE av_id = \''.(int)$av_id.'\'');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT user_id FROM u_avisos WHERE av_id = \''.(int)$av_id.'\'');
 		$data = db_exec('fetch_assoc', $query);
 		
         # RETURN
         if(empty($data['user_id']) || $data['user_id'] != $tsUser->uid && !$tsUser->is_admod == 1) return false;
         else {
-		    db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM u_avisos WHERE av_id = \''.(int)$av_id.'\'');
+		    db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM u_avisos WHERE av_id = \''.(int)$av_id.'\'');
             return true;
         }
 		}
@@ -175,28 +179,28 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
             if(empty($allow)) return true;
             // VERIFICAR CUANTAS NOTIFICACIONES DEL MISMO TIPO Y EN POCO TIEMPO TENEMOS
             $tiempo = time() - 3600; //  HACE UNA HORA
-			$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT not_id FROM u_monitor WHERE user_id = \''.(int)$user_id.'\' AND obj_uno = \''.(int)$obj_uno.'\' AND obj_dos = \''.(int)$obj_dos.'\' AND not_type = \''.(int)$type.'\' AND not_date > \''.$tiempo.'\' AND not_menubar > \'0\' ORDER BY not_id DESC LIMIT 1');            
+			$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT not_id FROM u_monitor WHERE user_id = \''.(int)$user_id.'\' AND obj_uno = \''.(int)$obj_uno.'\' AND obj_dos = \''.(int)$obj_dos.'\' AND not_type = \''.(int)$type.'\' AND not_date > \''.$tiempo.'\' AND not_menubar > \'0\' ORDER BY not_id DESC LIMIT 1');
 			$not_data = db_exec('fetch_assoc', $query);
             
             //....
             if(!empty($not_data['not_id']) && $type != 4) $not_db_type = 'update'; //ACTUALIZAR
             else $not_db_type = 'insert'; // INSERTAR
 			// COMPROBAR LIMITE DE NOTIFICACIONES
-			$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT not_id FROM u_monitor WHERE user_id = \''.(int)$user_id.'\' ORDER BY not_id DESC');
+			$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT not_id FROM u_monitor WHERE user_id = \''.(int)$user_id.'\' ORDER BY not_id DESC');
             $data = result_array($query);
             
             $ntotal = count($data);
             $delid = $data[$ntotal-1]['not_id']; // ID DE ULTIMA NOTIFICACION
 			// ELIMINAR NOTIFICACIONES?
 			if($ntotal > $tsCore->settings['c_max_nots']){
-			     db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM u_monitor WHERE not_id = \''.(int)$delid.'\'');
+			     db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM u_monitor WHERE not_id = \''.(int)$delid.'\'');
 			}
             // ACTUALIZAMOS / INSERTAMOS
             if($not_db_type == 'update'){
-                if(db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_monitor SET obj_user = \''.(int)$obj_user.'\', not_date = \''.time().'\', not_total = not_total + 1 WHERE not_id = \''.(int)$not_data['not_id'].'\''))
+                if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_monitor SET obj_user = \''.(int)$obj_user.'\', not_date = \''.time().'\', not_total = not_total + 1 WHERE not_id = \''.(int)$not_data['not_id'].'\''))
                 return true;
             } else {
-                if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_monitor (user_id, obj_user, obj_uno, obj_dos, obj_tres, not_type, not_date) VALUES (\''.$user_id.'\', \''.$obj_user.'\', \''.$obj_uno.'\', \''.$obj_dos.'\', \''.$obj_tres.'\', \''.$type.'\', \''.time().'\')'))
+                if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_monitor (user_id, obj_user, obj_uno, obj_dos, obj_tres, not_type, not_date) VALUES (\''.$user_id.'\', \''.$obj_user.'\', \''.$obj_uno.'\', \''.$obj_dos.'\', \''.$obj_tres.'\', \''.$type.'\', \''.time().'\')'))
                 return true;   
             }
 		}
@@ -214,7 +218,7 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
         if($f_type == 1) $f_id = $user_id;
         elseif($f_type == 2) $f_id = $obj_uno;
 		# BUSCAMOS LOS Q SIGAN A ESTE POST/ USER
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT f_user FROM u_follows WHERE f_id = \''.(int)$f_id.'\' AND f_type = \''.(int)$f_type.'\'');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT f_user FROM u_follows WHERE f_id = \''.(int)$f_id.'\' AND f_type = \''.(int)$f_type.'\'');
 		$data = result_array($query);
 		
 		//
@@ -237,7 +241,7 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
     public function setMuroRepost($pub_id, $p_user, $p_user_pub){
        global $tsUser;
         //
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT c_user FROM u_muro_comentarios WHERE pub_id = \''.(int)$pub_id.'\' AND c_user NOT IN (\''.$tsUser->uid.'\', \''.(int)$p_user.'\')'); 
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT c_user FROM u_muro_comentarios WHERE pub_id = \''.(int)$pub_id.'\' AND c_user NOT IN (\''.$tsUser->uid.'\', \''.(int)$p_user.'\')');
         $data = result_array($query);
 		
         // ENVIAMOS NOTIFICACION A LOS QUE HAYAN COMENTADO
@@ -283,12 +287,12 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
             $sql = 'SELECT m.*, u.user_name AS usuario FROM u_monitor AS m LEFT JOIN u_miembros AS u ON m.obj_user = u.user_id WHERE m.user_id = \''.$tsUser->uid.'\' ORDER BY m.not_id DESC';
             
                //ESTADÍSTICAS
-              $dataDos['stats']['posts'] = db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' && f_type = \'3\''));
-		      $dataDos['stats']['seguidores'] = db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.$tsUser->uid.'\' && f_type = \'1\''));
-              $dataDos['stats']['siguiendo'] = db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' && f_type = \'1\''));
+              $dataDos['stats']['posts'] = db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' && f_type = \'3\''));
+		      $dataDos['stats']['seguidores'] = db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.$tsUser->uid.'\' && f_type = \'1\''));
+              $dataDos['stats']['siguiendo'] = db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' && f_type = \'1\''));
 		
             # CARGO LOS FILTROS
-			$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT c_monitor FROM u_portal WHERE user_id = \''.$tsUser->uid.'\' LIMIT 1');
+			$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT c_monitor FROM u_portal WHERE user_id = \''.$tsUser->uid.'\' LIMIT 1');
             $filtros = db_exec('fetch_assoc', $cuery);
             
             //
@@ -298,12 +302,12 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
             }
 		} 
         // PROCESOS
-        $query = db_exec(array(__FILE__, __LINE__), 'query', $sql);
+        $query = db_exec([__FILE__, __LINE__], 'query', $sql);
 		$data = result_array($query);
 		
         // ACTUALIZAMOS
-        if($this->show_type == 1) db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_monitor SET not_menubar = \''.(int)$not_del.'\' WHERE user_id = \''.$tsUser->uid.'\' AND not_menubar > 0');
-        else db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_monitor SET not_menubar = \'0\', not_monitor = \'0\' WHERE user_id = \''.$tsUser->uid.'\' AND not_monitor = \'1\'');
+        if($this->show_type == 1) db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_monitor SET not_menubar = \''.(int)$not_del.'\' WHERE user_id = \''.$tsUser->uid.'\' AND not_menubar > 0');
+        else db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_monitor SET not_menubar = \'0\', not_monitor = \'0\' WHERE user_id = \''.$tsUser->uid.'\' AND not_monitor = \'1\'');
 		// ARMAR TEXTOS Y LINKS :)
 		$dataDos['data'] = $this->armNotificaciones($data);
         // TOTAL DE NOTIDICACIONES
@@ -330,7 +334,7 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
          // CONSULTAMOS
          if(is_array($sql)) $dato = $sql;
          else {
-            $query = db_exec(array(__FILE__, __LINE__), 'query', $sql);
+            $query = db_exec([__FILE__, __LINE__], 'query', $sql);
             if($query)
             $dato = db_exec('fetch_assoc', $query);
          }
@@ -377,13 +381,13 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
             case 13:
                 global $tsUser;
                 // HAY MAS DE UNA NOTIFICACION DEL MISMO TIPO
-                $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p.pub_id, p.p_user, p.p_user_pub, u.user_name FROM u_muro AS p LEFT JOIN u_miembros AS u ON p.p_user = u.user_id WHERE p.pub_id = \''.(int)$data['obj_uno'].'\' LIMIT 1');
+                $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT p.pub_id, p.p_user, p.p_user_pub, u.user_name FROM u_muro AS p LEFT JOIN u_miembros AS u ON p.p_user = u.user_id WHERE p.pub_id = \''.(int)$data['obj_uno'].'\' LIMIT 1');
 				$dato = db_exec('fetch_assoc', $query);
 				
                 //
                 $dato['p_user_resp'] = $data['obj_user'];
                 $dato['p_user_name'] = $dato['user_name']; // // DUEÑO DEL MURO
-                $dato['user_name'] = $tsUser->getUserName($data['obj_user']); // QUIEN PUBLICO
+                $dato['user_name'] = $tsUser->getUserData(type: 'name', user: $data['obj_user']); // QUIEN PUBLICO
                 //
                 return $dato;
             break;
@@ -552,23 +556,23 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
 		$notType = 4; // NOTIFICACION
 		$fw = $this->getFollowVars();
         // ANTI FLOOD
-        $flood = $tsCore->antiFlood(false,'follow');
+        $flood = $tsUser->antiFlood(print: false, type: 'follow');
         if(strlen($flood) > 1) {
             $flood = str_replace('0: ','',$flood);
             return '1-'.$fw['obj'].'-0-'.$flood;
         }
 		// YA EXISTE?
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' AND f_id = \''.(int)$fw['obj'].'\' AND f_type = \''.$fw['type'].'\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' AND f_id = \''.(int)$fw['obj'].'\' AND f_type = \''.$fw['type'].'\' LIMIT 1');
 		$data = db_exec('fetch_assoc', $query);
 		
 		// SEGUIR
 		if(empty($data['follow_id'])){
             if($tsUser->uid == $fw['obj'] && $fw['type'] == 1) return '1-'.$fw['obj'].'-0-No puedes seguirte a ti mismo.';
-			if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO `u_follows` (`f_user`, `f_id`, `f_type`, `f_date`) VALUES (\''.$tsUser->uid.'\', \''.(int)$fw['obj'].'\', \''.$fw['type'].'\', \''.time().'\')')){
+			if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO `u_follows` (`f_user`, `f_id`, `f_type`, `f_date`) VALUES (\''.$tsUser->uid.'\', \''.(int)$fw['obj'].'\', \''.$fw['type'].'\', \''.time().'\')')){
 				// MONITOR?
 				if($fw['notUser'] > 0) $this->setNotificacion($notType, $fw['notUser'], $tsUser->uid);
 				// CUANTOS?
-				$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(follow_id) AS total FROM u_follows WHERE f_id = \''.(int)$fw['obj'].'\' AND f_type = \''.(int)$fw['type'].'\'');
+				$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(follow_id) AS total FROM u_follows WHERE f_id = \''.(int)$fw['obj'].'\' AND f_type = \''.(int)$fw['type'].'\'');
 				$total = db_exec('fetch_assoc', $query);
 				
 				// ACTIVIDAD
@@ -592,15 +596,15 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
 		$notType = 4; // NOTIFICACION
 		$fw = $this->getFollowVars();
         // ANTI FLOOD
-        $flood = $tsCore->antiFlood(false, 'follow');
+        $flood = $tsUser->antiFlood(false, 'follow');
         if(strlen($flood) > 1) {
             $flood = str_replace('0: ','',$flood);
             return '1-'.$fw['obj'].'-0-'.$flood;
         }
 		// DEJAR DE SEGUIR
-		if(db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' AND f_id = \''.(int)$fw['obj'].'\' AND f_type = \''.$fw['type'].'\'')){
+		if(db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' AND f_id = \''.(int)$fw['obj'].'\' AND f_type = \''.$fw['type'].'\'')){
 				// CUANTOS?
-				$total= db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$fw['obj'].'\' AND f_type = \''.$fw['type'].'\''));
+				$total= db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$fw['obj'].'\' AND f_type = \''.$fw['type'].'\''));
 				// RESPUESTA
 				return '0-'.$fw['obj'].'-'.$total;
 		} else return '1-'.$fw['obj'].'-0-No se pudo completar la acci&oacute;n.';
@@ -647,15 +651,15 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
 			case 'seguidores':
 				$query = 'SELECT u.user_id, u.user_name, p.user_pais, p.p_mensaje, f.follow_id FROM u_miembros AS u LEFT JOIN u_perfil AS p ON u.user_id = p.user_id LEFT JOIN u_follows AS f ON p.user_id = f.f_user WHERE f.f_id = \''.(int)$user_id.'\' AND f.f_type = \'1\' ORDER BY f.f_date DESC';
                 // PAGINAR
-                $total = db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', $query));
+                $total = db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', $query));
                 $pages = $tsCore->getPagination($total, 12);
                 $data['pages'] = $pages;
                 //
-				$dato = result_array(db_exec(array(__FILE__, __LINE__), 'query', $query.' LIMIT '.$pages['limit']));
+				$dato = result_array(db_exec([__FILE__, __LINE__], 'query', $query.' LIMIT '.$pages['limit']));
 				
 				//
 				foreach($dato as $key => $val){
-					$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_user = \''.(int)$user_id.'\' AND f_id = \''.(int)$val['user_id'].'\' AND f_type = \'1\'');
+					$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_user = \''.(int)$user_id.'\' AND f_id = \''.(int)$val['user_id'].'\' AND f_type = \'1\'');
 					$siguiendo = db_exec('fetch_assoc', $query);
 					
 					if(!empty($siguiendo['follow_id'])) $val['follow'] = 1;
@@ -667,22 +671,22 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
 			case 'siguiendo':
 				$query = 'SELECT u.user_id, u.user_name, p.user_pais, p.p_mensaje, f.follow_id FROM u_miembros AS u LEFT JOIN u_perfil AS p ON u.user_id = p.user_id LEFT JOIN u_follows AS f ON p.user_id = f.f_id WHERE f.f_user = \''.(int)$user_id.'\' AND f.f_type = \'1\' ORDER BY f.f_date DESC';
                 // PAGINAR
-                $total = db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', $query));
+                $total = db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', $query));
                 $pages = $tsCore->getPagination($total, 12);
                 $data['pages'] = $pages;
                 //
-                $data['data'] = result_array(db_exec(array(__FILE__, __LINE__), 'query', $query.' LIMIT '.$pages['limit']));
+                $data['data'] = result_array(db_exec([__FILE__, __LINE__], 'query', $query.' LIMIT '.$pages['limit']));
                 
                 // 
 			break;
             case 'posts':
 				$query = 'SELECT f.f_id, p.post_user, p.post_title, u.user_name, c.c_seo, c.c_nombre, c.c_img FROM u_follows AS f LEFT JOIN p_posts AS p ON f.f_id = p.post_id LEFT JOIN u_miembros AS u ON u.user_id = p.post_user LEFT JOIN p_categorias AS c ON c.cid = p.post_category WHERE f.f_user = \''.(int)$user_id.'\' AND f.f_type = \'2\'ORDER BY f.f_date DESC';
                 // PAGINAR
-                $total = db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', $query));
+                $total = db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', $query));
                 $pages = $tsCore->getPagination($total, 12);
                 $data['pages'] = $pages;
                 //
-                $data['data'] = result_array(db_exec(array(__FILE__, __LINE__), 'query', $query.' LIMIT '.$pages['limit']));
+                $data['data'] = result_array(db_exec([__FILE__, __LINE__], 'query', $query.' LIMIT '.$pages['limit']));
                 
             break;
 		}
@@ -701,22 +705,22 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
 		//
 		$postid = $_POST['postid'];
         // TIENE SEGUIDORES?
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.$tsUser->uid.'\'  AND f_type = \'1\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.$tsUser->uid.'\'  AND f_type = \'1\' LIMIT 1');
         $seguidores = db_exec('num_rows', $query);
         // YA LO HA RECOMENDADO?
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$postid.'\' AND f_user = \''.$tsUser->uid.'\' AND f_type = \'3\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$postid.'\' AND f_user = \''.$tsUser->uid.'\' AND f_type = \'3\' LIMIT 1');
         $recomendado = db_exec('num_rows', $query);
         
         if($seguidores < 1) return '0-Debes tener al menos un seguidor';
         if($recomendado > 0) return '0-No puedes recomendar el mismo post m&aacute;s de una vez.'; 
 		//
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT post_user FROM p_posts WHERE post_id = \''.(int)$postid.'\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT post_user FROM p_posts WHERE post_id = \''.(int)$postid.'\' LIMIT 1');
 		$data = db_exec('fetch_assoc', $query);
 		
 		//
 		if($tsUser->uid != $data['post_user']){
             // GUARDAMOS EN FOLLOWS PUES ES LA RECOMENDACION PARA SU SEGUIDORES! xD
-			db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_follows (f_id, f_user, f_type, f_date) VALUES (\''.(int)$postid.'\', \''.$tsUser->uid.'\', \'3\', \''.time().'\') ');
+			db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_follows (f_id, f_user, f_type, f_date) VALUES (\''.(int)$postid.'\', \''.$tsUser->uid.'\', \'3\', \''.time().'\') ');
 			// NOTIFICAR
 			if($this->setFollowNotificacion(6, 1, $tsUser->uid, $postid)) {
                 $tsActividad->setActividad(4, $postid);
@@ -738,7 +742,7 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
         $filtro_id = (int) $_POST['fid'];
         $filtro_id = 'f'.$filtro_id;
         # SACAMOS LA CONFIGURACION
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT c_monitor FROM u_portal WHERE user_id = \''.$tsUser->uid.'\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT c_monitor FROM u_portal WHERE user_id = \''.$tsUser->uid.'\' LIMIT 1');
         $data = db_exec('fetch_assoc', $query);
         
         # PROSESAMOS
@@ -752,7 +756,7 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
         }
         # GUARDAMOS LOS NUEVOS FILTROS
         $filtros = serialize($filtros);
-		db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_portal SET c_monitor = '.$filtros.' WHERE user_id = \''.$tsUser->uid.'\'');
+		db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_portal SET c_monitor = '.$filtros.' WHERE user_id = \''.$tsUser->uid.'\'');
         //
         return true;
     }
@@ -765,7 +769,7 @@ public function setNotificacion($type, $user_id, $obj_user, $obj_uno = 0, $obj_d
      */
     private function allowNotifi($type, $user_id){
         # CONSULTAMOS
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT c_monitor FROM u_portal WHERE user_id = \''.(int)$user_id.'\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT c_monitor FROM u_portal WHERE user_id = \''.(int)$user_id.'\' LIMIT 1');
         $data = db_exec('fetch_assoc', $query);
         
         # PROSESAMOS

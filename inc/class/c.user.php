@@ -11,6 +11,10 @@ defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
 
 require_once TS_CLASS . "/c.session.php";
 
+use DevBroken\Utils\Http\Response;
+use DevBroken\Utils\Password\Password;
+use DevBroken\Utils\Logger\Logger;
+
 class tsUser {
 
 	public mixed $info = [];
@@ -458,7 +462,7 @@ class tsUser {
 	public function setMenciones(string $html): string {
 		if(empty($html)) return '';
 		# BUSCAMOS A USUARIOS
-		preg_match_all('/\B@([a-zA-Z0-9_-]{4,16}+)\b/',$html, $users);
+		preg_match_all('/\B@([a-zA-Z0-9_-]{4,20}+)\b/',$html, $users);
 		$menciones = $users[1];
 		# VEMOS CUALES EXISTEN
 		foreach($menciones as $user) {

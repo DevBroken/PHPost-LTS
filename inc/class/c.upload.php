@@ -1,10 +1,14 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
 /**
- * Modelo para subir im�genes
- *
- * @name    c.upload.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
+
 class tsUpload {
     var $type = 1;  // TIPO DE SUBIDA
     var $max_size = 1048576 * 2;    // 2MB 

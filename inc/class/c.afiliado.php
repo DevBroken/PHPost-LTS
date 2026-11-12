@@ -1,10 +1,14 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
 /**
- * Modelo para el control de los afiliados
- *
- * @name    c.afiliado.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
+
 class tsAfiliado {
 
 	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*\
@@ -17,9 +21,9 @@ class tsAfiliado {
         
         //
         if($type == 'home')
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT aid,a_titulo,a_url,a_banner,a_descripcion FROM w_afiliados WHERE a_active = \'1\' ORDER BY RAND() LIMIT 5');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT aid,a_titulo,a_url,a_banner,a_descripcion FROM w_afiliados WHERE a_active = \'1\' ORDER BY RAND() LIMIT 5');
         elseif($type == 'admin')
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT aid,a_titulo,a_url,a_banner,a_descripcion,a_sid,a_hits_in,a_hits_out,a_date,a_active FROM w_afiliados');   
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT aid,a_titulo,a_url,a_banner,a_descripcion,a_sid,a_hits_in,a_hits_out,a_date,a_active FROM w_afiliados');
         //
         $data = result_array($query);
         
@@ -33,9 +37,9 @@ class tsAfiliado {
         global $tsCore;
         //
         if(!$type){
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT aid,a_titulo,a_url,a_banner,a_descripcion FROM w_afiliados WHERE aid = \''.(int)$_POST['ref'].'\' ');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT aid,a_titulo,a_url,a_banner,a_descripcion FROM w_afiliados WHERE aid = \''.(int)$_POST['ref'].'\' ');
 		}elseif($type = 'admin'){
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT aid,a_titulo,a_url,a_banner,a_descripcion FROM w_afiliados WHERE aid = \''.(int)$_GET['aid'].'\' ');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT aid,a_titulo,a_url,a_banner,a_descripcion FROM w_afiliados WHERE aid = \''.(int)$_GET['aid'].'\' ');
 		}
 		$data = db_exec('fetch_assoc', $query);
 		
@@ -59,7 +63,7 @@ class tsAfiliado {
         }
         if(!filter_var(''.$_REQUEST['aurl'].'', FILTER_VALIDATE_URL)){ die('0: Url incorrecta'); }
         //
-		if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO `w_afiliados` (a_titulo, a_url, a_banner, a_descripcion, a_sid, a_date) VALUES (\''.$tsCore->setSecure($dataIn['titulo']).'\', \''.$tsCore->setSecure($dataIn['url']).'\', \''.$tsCore->setSecure($dataIn['banner']).'\', \''.$tsCore->setSecure($dataIn['desc']).'\', \''.intval($dataIn['sid']).'\',\''.time().'\')')) {
+		if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO `w_afiliados` (a_titulo, a_url, a_banner, a_descripcion, a_sid, a_date) VALUES (\''.$tsCore->setSecure($dataIn['titulo']).'\', \''.$tsCore->setSecure($dataIn['url']).'\', \''.$tsCore->setSecure($dataIn['banner']).'\', \''.$tsCore->setSecure($dataIn['desc']).'\', \''.intval($dataIn['sid']).'\',\''.time().'\')')) {
 		$afid = db_exec('insert_id');
 		  // AVISO
             $aviso = '<center><a href="'.$dataIn['url'].'"><img src="'.$dataIn['banner'].'" title="'.$dataIn['titulo'].'"/></a></center> <br /><br /> '.$dataIn['titulo'].' quiere ser su afiliado, dir&iacute;jase a la administraci&oacute;n para aceptar o cancelarla.';
@@ -98,7 +102,7 @@ class tsAfiliado {
         }
         if(!filter_var($url, FILTER_VALIDATE_URL)){ return '0: Url incorrecta'; }
         //
-		if(db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE w_afiliados SET a_titulo = \''.$tsCore->setSecure($titulo).'\', a_url = \''.$tsCore->setSecure($url).'\', a_banner = \''.$tsCore->setSecure($banner).'\', a_descripcion = \''.$tsCore->setSecure($descripcion).'\' WHERE aid= \''.(int)$afiliado.'\'')) {
+		if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE w_afiliados SET a_titulo = \''.$tsCore->setSecure($titulo).'\', a_url = \''.$tsCore->setSecure($url).'\', a_banner = \''.$tsCore->setSecure($banner).'\', a_descripcion = \''.$tsCore->setSecure($descripcion).'\' WHERE aid= \''.(int)$afiliado.'\'')) {
 		return '1: Guardado';
         }else{
 		return '0: Ocurri&oacute; un error';
@@ -112,7 +116,7 @@ class tsAfiliado {
         global $tsUser;
         //
 		if($tsUser->is_admod == 1) {
-		if(db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM w_afiliados WHERE aid = \''.(int)$aid.'\''));
+		if(db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM w_afiliados WHERE aid = \''.(int)$aid.'\''));
 		return '1: Afiliado eliminado';
 		}else return '0: T%iacute;o, no puedes hacer eso';
     }
@@ -121,16 +125,16 @@ class tsAfiliado {
         global $tsUser;
 		
 		$afiliado = intval($_POST['aid']);
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT a_active FROM w_afiliados WHERE aid = \''.(int)$afiliado.'\'');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT a_active FROM w_afiliados WHERE aid = \''.(int)$afiliado.'\'');
         $data = db_exec('fetch_assoc', $query);
         
 		
         if($data['a_active'] == 1){
-		    if(db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE w_afiliados SET a_active = \'0\' WHERE aid = \''.(int)$afiliado.'\'')) {
+		    if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE w_afiliados SET a_active = \'0\' WHERE aid = \''.(int)$afiliado.'\'')) {
 			   return '2: Afiliado deshabilitado';
 			   }else return '0: Ocurri&oacute, un error';
         } else{
-		    if(db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE w_afiliados SET a_active = \'1\' WHERE aid = \''.(int)$afiliado.'\'')) {
+		    if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE w_afiliados SET a_active = \'1\' WHERE aid = \''.(int)$afiliado.'\'')) {
 			   return '1: Afiliado habilitado.';
         } else return 'Ocurri&oacute; un error';
 			}
@@ -143,19 +147,19 @@ class tsAfiliado {
     function urlOut(){
         global $tsCore;
         //
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT a_url,a_sid FROM w_afiliados WHERE aid = \''.intval($_GET['ref']).'\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT a_url,a_sid FROM w_afiliados WHERE aid = \''.intval($_GET['ref']).'\' LIMIT 1');
         $data = db_exec('fetch_assoc', $query);
         
         //
         if(isset($data['a_url'])){
-			db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE `w_afiliados` SET a_hits_out = a_hits_out + 1 WHERE aid = \''.intval($_GET['ref']).'\'');
+			db_exec([__FILE__, __LINE__], 'query', 'UPDATE `w_afiliados` SET a_hits_out = a_hits_out + 1 WHERE aid = \''.intval($_GET['ref']).'\'');
             // Y REDIRECCIONAMOS
             $enref = empty($data['a_sid']) ? '/' : '/?ref='.$data['a_sid']; // REFERIDO
             $enurl = $data['a_url'].$enref;
             // REDIRECCIONAMOS
-            $tsCore->redirectTo($enurl);
+            $tsCore->navigate($enurl);
             exit();
-        } else $tsCore->redirectTo($tsCore->settings['url']);
+        } else $tsCore->navigate('/');
     }
     /*
         urlIn()
@@ -165,8 +169,8 @@ class tsAfiliado {
         //
         $ref = (int)$_GET['ref'];
 		
-        if($ref > 0) db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE `w_afiliados` SET a_hits_in = a_hits_in + 1 WHERE  aid = \''.intval($_GET['ref']).'\'');
+        if($ref > 0) db_exec([__FILE__, __LINE__], 'query', 'UPDATE `w_afiliados` SET a_hits_in = a_hits_in + 1 WHERE  aid = \''.intval($_GET['ref']).'\'');
         // 
-        $tsCore->redirectTo($tsCore->settings['url']);
+        $tsCore->navigate('/');
     }
 }

@@ -1,10 +1,14 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
 /**
- * Modelo para el control de los borradores
- *
- * @name    c.borradores.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
+
 class tsDrafts {
 
 	/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*\
@@ -37,11 +41,11 @@ class tsDrafts {
 				$bid = intval($_POST['borrador_id']);
 				$updates = $tsCore->getIUP($draftData, 'b_');
 				//
-                if(db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE `p_borradores` SET '.$updates.' WHERE bid = \''.(int)$bid.'\' AND b_user = \''.$tsUser->info['user_id'].'\'')) return '1: '.$bid;
+                if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE `p_borradores` SET '.$updates.' WHERE bid = \''.(int)$bid.'\' AND b_user = \''.$tsUser->info['user_id'].'\'')) return '1: '.$bid;
 				else return '0: '.show_error('Error al ejecutar la consulta de la l&iacute;nea '.__LINE__.' de '.__FILE__.'.', 'db');
 		   } else {
 				// INSERT
-			    if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO `p_borradores` (`b_user`, `b_date`, `b_title`, `b_body`, `b_tags`, `b_category`, `b_private`, `b_block_comments`, `b_sponsored`, `b_sticky`, `b_smileys`, `b_visitantes`, `b_status`, `b_causa`) VALUES (\''.$tsUser->info['user_id'].'\', \''.$draftData['date'].'\', \''.$draftData['title'].'\', \''.$draftData['body'].'\', \''.$draftData['tags'].'\', \''.$draftData['category'].'\', \''.$draftData['private'].'\', \''.$draftData['block_comments'].'\', \''.$draftData['sponsored'].'\', \''.$draftData['sticky'].'\', \''.$draftData['smileys'].'\', \''.$draftData['visitantes'].'\', \'1\', \'\')')) return '1: '.db_exec('insert_id');
+			    if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO `p_borradores` (`b_user`, `b_date`, `b_title`, `b_body`, `b_tags`, `b_category`, `b_private`, `b_block_comments`, `b_sponsored`, `b_sticky`, `b_smileys`, `b_visitantes`, `b_status`, `b_causa`) VALUES (\''.$tsUser->info['user_id'].'\', \''.$draftData['date'].'\', \''.$draftData['title'].'\', \''.$draftData['body'].'\', \''.$draftData['tags'].'\', \''.$draftData['category'].'\', \''.$draftData['private'].'\', \''.$draftData['block_comments'].'\', \''.$draftData['sponsored'].'\', \''.$draftData['sticky'].'\', \''.$draftData['smileys'].'\', \''.$draftData['visitantes'].'\', \'1\', \'\')')) return '1: '.db_exec('insert_id');
 			   else return '0: '.show_error('Error al ejecutar la consulta de la l&iacute;nea '.__LINE__.' de '.__FILE__.'.', 'db');
 			}
 			} else $return = 'Categor&iacute;a';
@@ -56,7 +60,7 @@ class tsDrafts {
 	function getDrafts(){
 		global $tsCore, $tsUser;
 		//
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT c.c_nombre, c.c_seo, c.c_img, b.bid, b.b_title, b.b_date, b.b_status, b.b_causa FROM p_categorias AS c LEFT JOIN p_borradores AS b ON c.cid = b.b_category WHERE b.b_user = \''.$tsUser->info['user_id'].'\' ORDER BY b.b_date');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT c.c_nombre, c.c_seo, c.c_img, b.bid, b.b_title, b.b_date, b.b_status, b.b_causa FROM p_categorias AS c LEFT JOIN p_borradores AS b ON c.cid = b.b_category WHERE b.b_user = \''.$tsUser->info['user_id'].'\' ORDER BY b.b_date');
 		//
 		$drafts = result_array($query);
 		// SET
@@ -74,7 +78,7 @@ class tsDrafts {
 		global $tsCore, $tsUser;
 		//
 		$bid = intval($_GET['action']);
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT bid, b_user, b_date, b_title, b_body, b_tags, b_category, b_private, b_block_comments, b_sponsored, b_sticky, b_smileys, b_post_id, b_status, b_causa FROM `p_borradores` WHERE `bid` = \''.(int)$bid.'\' AND `b_user` = \''.$tsUser->info['user_id'].'\' AND b_status = \''.$status.'\' LIMIT 1');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT bid, b_user, b_date, b_title, b_body, b_tags, b_category, b_private, b_block_comments, b_sponsored, b_sticky, b_smileys, b_post_id, b_status, b_causa FROM `p_borradores` WHERE `bid` = \''.(int)$bid.'\' AND `b_user` = \''.$tsUser->info['user_id'].'\' AND b_status = \''.$status.'\' LIMIT 1');
 		//
 		return db_exec('fetch_assoc', $query);
 	}
@@ -85,7 +89,7 @@ class tsDrafts {
 		global $tsCore, $tsUser;
 		//
 		$bid = intval($_POST['borrador_id']);
-        if(db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM `p_borradores` WHERE `bid` = \''.(int)$bid.'\' AND `b_user` = \''.$tsUser->info['user_id'].'\'')) return '1: Borrador eliminado';
+        if(db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM `p_borradores` WHERE `bid` = \''.(int)$bid.'\' AND `b_user` = \''.$tsUser->info['user_id'].'\'')) return '1: Borrador eliminado';
 		else return '0: Ocurri&oacute; un error';
 	}
 

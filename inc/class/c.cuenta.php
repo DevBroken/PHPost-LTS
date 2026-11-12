@@ -1,10 +1,18 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
 /**
- * Modelo para el control y edición de la cuenta de usuario
- *
- * @name    c.cuenta.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
+
+require_once __DIR__ . '/c.visitas.php';
+
+use DevBroken\Utils\Password\Password;
+
 class tsCuenta {
 
 	# Redes sociales disponibles
@@ -27,7 +35,7 @@ class tsCuenta {
 		//
 		if(empty($user_id)) $user_id = $tsUser->uid;
 		//
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p.*, u.user_registro, u.user_lastactive FROM u_perfil AS p LEFT JOIN u_miembros AS u ON p.user_id = u.user_id WHERE p.user_id = \''.(int)$user_id.'\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT p.*, u.user_registro, u.user_lastactive FROM u_perfil AS p LEFT JOIN u_miembros AS u ON p.user_id = u.user_id WHERE p.user_id = \''.(int)$user_id.'\' LIMIT 1');
 		$perfilInfo = db_exec('fetch_assoc', $query);
         
 		// CAMBIOS
@@ -59,9 +67,9 @@ class tsCuenta {
 		loadHeadInfo($user_id)
 	*/
 	function loadHeadInfo($user_id){
-		global $tsUser, $tsCore;
+		global $tsUser, $tsCore, $tsVisitas;
 		// INFORMACION GENERAL
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT u.user_id, u.user_name, u.user_registro, u.user_lastactive, u.user_activo, u.user_baneado, p.user_sexo, p.user_pais, p.p_nombre, p.p_avatar, p.p_mensaje, p.p_socials, p.p_empresa, p.p_configs FROM u_miembros AS u, u_perfil AS p WHERE u.user_id = \''.(int)$user_id.'\' AND p.user_id = \''.(int)$user_id.'\'');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT u.user_id, u.user_name, u.user_registro, u.user_lastactive, u.user_activo, u.user_baneado, p.user_sexo, p.user_pais, p.p_nombre, p.p_avatar, p.p_mensaje, p.p_socials, p.p_empresa, p.p_configs FROM u_miembros AS u, u_perfil AS p WHERE u.user_id = \''.(int)$user_id.'\' AND p.user_id = \''.(int)$user_id.'\'');
 		$data = db_exec('fetch_assoc', $query);
         
         //
@@ -85,38 +93,33 @@ class tsCuenta {
 		}
 		
 		if($data['can_hits']){
-		$data['visitas'] = result_array(db_exec(array(__FILE__, __LINE__), 'query', 'SELECT v.*, u.user_id, u.user_name FROM w_visitas AS v LEFT JOIN u_miembros AS u ON v.user = u.user_id WHERE v.for = \''.(int)$user_id.'\' && v.type = \'1\' && user > 0 ORDER BY v.date DESC LIMIT 7'));
-		$q1 = db_exec('fetch_row', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(u.user_id) AS a FROM w_visitas AS v LEFT JOIN u_miembros AS u ON v.user = u.user_id WHERE v.for = \''.(int)$user_id.'\' && v.type = \'1\''));
+		$data['visitas'] = result_array(db_exec([__FILE__, __LINE__], 'query', 'SELECT v.*, u.user_id, u.user_name FROM w_visitas AS v LEFT JOIN u_miembros AS u ON v.user = u.user_id WHERE v.for = \''.(int)$user_id.'\' && v.type = \'1\' && user > 0 ORDER BY v.date DESC LIMIT 7'));
+		$q1 = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(u.user_id) AS a FROM w_visitas AS v LEFT JOIN u_miembros AS u ON v.user = u.user_id WHERE v.for = \''.(int)$user_id.'\' && v.type = \'1\''));
 		$data['visitas_total'] = $q1[0];
         }
 		
 
-		$visitado = db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT id FROM `w_visitas` WHERE `for` = \''.(int)$user_id.'\' && `type` = \'1\' && '.($tsUser->is_member ? '(`user` = \''.$tsUser->uid.'\' OR `ip` LIKE \''.$_SERVER['REMOTE_ADDR'].'\')' : '`ip` LIKE \''.$_SERVER['REMOTE_ADDR'].'\'').' LIMIT 1'));
-		if(($tsUser->is_member && $visitado == 0 && $tsUser->uid != $user_id) || ($tsCore->settings['c_hits_guest'] == 1 && !$tsUser->is_member && !$visitado)) {
-			db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO w_visitas (`user`, `for`, `type`, `date`, `ip`) VALUES (\''.$tsUser->uid.'\', \''.(int)$user_id.'\', \'1\', \''.time().'\', \''.$_SERVER['REMOTE_ADDR'].'\')');
-			//db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_perfil SET p_visitas = p_visitas + 1 WHERE user_id = \''.(int)$user_id.'\''); // Eliminado en 1.1.000.9
-		}else{
-		db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE `w_visitas` SET `date` = \''.time().'\', ip = \''.$_SERVER['REMOTE_ADDR'].'\' WHERE `for` = \''.(int)$post_id.'\' && `type` = \'1\'');
-		}
+		// VISITA AL PERFIL (ver tsVisitas: visitas de usuarios, tipo 1)
+		$tsVisitas->add('usuario', (int)$user_id, (int)$user_id);
 		
 		// REAL STATS
-		$data['stats'] = db_exec('fetch_assoc', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT u.user_id, u.user_rango, u.user_puntos, u.user_posts, u.user_comentarios, u.user_seguidores, u.user_cache, r.r_name, r.r_color FROM u_miembros AS u LEFT JOIN u_rangos AS r ON  u.user_rango = r.rango_id WHERE u.user_id = \''.(int)$user_id.'\''));
+		$data['stats'] = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', 'SELECT u.user_id, u.user_rango, u.user_puntos, u.user_posts, u.user_comentarios, u.user_seguidores, u.user_cache, r.r_name, r.r_color FROM u_miembros AS u LEFT JOIN u_rangos AS r ON  u.user_rango = r.rango_id WHERE u.user_id = \''.(int)$user_id.'\''));
 		
         if($data['stats']['user_cache'] < time()-($tsCore->settings['c_stats_cache']*60)){
-        $q1 = db_exec('fetch_row', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(post_id) AS p FROM p_posts WHERE post_user = \''.(int)$user_id.'\' && post_status = \'0\''));
-        $q2 = db_exec('fetch_row', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(follow_id) AS s FROM u_follows WHERE f_id =\''.(int)$user_id.'\' && f_type = \'1\''));
-        $q3 = db_exec('fetch_row', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(cid) AS c FROM p_comentarios WHERE c_user = \''.(int)$user_id.'\' && c_status = \'0\''));
+        $q1 = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(post_id) AS p FROM p_posts WHERE post_user = \''.(int)$user_id.'\' && post_status = \'1\''));
+        $q2 = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(follow_id) AS s FROM u_follows WHERE f_id =\''.(int)$user_id.'\' && f_type = \'1\''));
+        $q3 = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(cid) AS c FROM p_comentarios WHERE c_user = \''.(int)$user_id.'\' && c_status = \'1\''));
         
         $data['stats']['user_posts'] = $q1[0];
 		$data['stats']['user_seguidores'] = $q2[0];
 		$data['stats']['user_comentarios'] = $q3[0];
-        db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_miembros SET user_posts = \''.$q1[0].'\', user_comentarios = \''.$q3[0].'\', user_seguidores = \''.$q2[0].'\', user_cache = \''.time().'\' WHERE  user_id = \''.(int)$user_id.'\'');
+        db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_miembros SET user_posts = \''.$q1[0].'\', user_comentarios = \''.$q3[0].'\', user_seguidores = \''.$q2[0].'\', user_cache = \''.time().'\' WHERE  user_id = \''.(int)$user_id.'\'');
         }
-        $q4 = db_exec('fetch_row', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT COUNT(foto_id) AS f FROM f_fotos WHERE f_user = \''.(int)$user_id.'\' && f_status = \'0\''));
+        $q4 = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', 'SELECT COUNT(foto_id) AS f FROM f_fotos WHERE f_user = \''.(int)$user_id.'\' && f_status = \'1\''));
         $data['stats']['user_fotos'] = $q4[0];
 		
 		// BLOQUEADO
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT * FROM `u_bloqueos` WHERE b_user = \''.$tsUser->uid.'\' AND b_auser = \''.(int)$user_id.'\' LIMIT 1');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM `u_bloqueos` WHERE b_user = \''.$tsUser->uid.'\' AND b_auser = \''.(int)$user_id.'\' LIMIT 1');
         $data['block'] = db_exec('fetch_assoc', $query);
         
         //
@@ -128,23 +131,23 @@ class tsCuenta {
 	function loadGeneral($user_id){
 		global $tsCore;
 		// MEDALLAS
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT m.*, a.* FROM w_medallas AS m LEFT JOIN w_medallas_assign AS a ON a.medal_id = m.medal_id WHERE a.medal_for = \''.(int)$user_id.'\' AND m.m_type = \'1\' ORDER BY a.medal_date DESC LIMIT 21');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT m.*, a.* FROM w_medallas AS m LEFT JOIN w_medallas_assign AS a ON a.medal_id = m.medal_id WHERE a.medal_for = \''.(int)$user_id.'\' AND m.m_type = \'1\' ORDER BY a.medal_date DESC LIMIT 21');
 		$data['medallas'] = result_array($query);
         $data['m_total'] = empty($data["medallas"]) ? 0 : count($data['medallas']);
         
 		// SEGUIDORES
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT f.follow_id, u.user_id, u.user_name FROM u_follows AS f LEFT JOIN u_miembros AS u ON f.f_user = u.user_id WHERE f.f_id = \''.(int)$user_id.'\' && f.f_type = \'1\' && u.user_activo = \'1\' && u.user_baneado = \'0\' ORDER BY f.f_date DESC LIMIT 21');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT f.follow_id, u.user_id, u.user_name FROM u_follows AS f LEFT JOIN u_miembros AS u ON f.f_user = u.user_id WHERE f.f_id = \''.(int)$user_id.'\' && f.f_type = \'1\' && u.user_activo = \'1\' && u.user_baneado = \'0\' ORDER BY f.f_date DESC LIMIT 21');
         $data['segs']['data'] = result_array($query);
         $data['segs']['total'] = empty($data["segs"]["data"]) ? 0 : count($data['segs']['data']);
         
 		// SIGUIENDO
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT f.follow_id, u.user_id, u.user_name FROM u_follows AS f LEFT JOIN u_miembros AS u ON f.f_id = u.user_id WHERE f.f_user = \''.(int)$user_id.'\' AND f.f_type = \'1\' && u.user_activo = \'1\' && u.user_baneado = \'0\' ORDER BY f.f_date DESC LIMIT 21');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT f.follow_id, u.user_id, u.user_name FROM u_follows AS f LEFT JOIN u_miembros AS u ON f.f_id = u.user_id WHERE f.f_user = \''.(int)$user_id.'\' AND f.f_type = \'1\' && u.user_activo = \'1\' && u.user_baneado = \'0\' ORDER BY f.f_date DESC LIMIT 21');
         $data['sigd']['data'] = result_array($query);
         $data['sigd']['total'] = empty($data["sigd"]["data"]) ? 0 : count($data['sigd']['data']);
         
         // ULTIMAS FOTOS
         if(empty($_GET['pid'])){
-		    $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT foto_id, f_title, f_url FROM f_fotos WHERE f_user = \''.(int)$user_id.'\' ORDER BY foto_id DESC LIMIT 6');
+		    $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT foto_id, f_title, f_url FROM f_fotos WHERE f_user = \''.(int)$user_id.'\' ORDER BY foto_id DESC LIMIT 6');
             $data['fotos'] = result_array($query);
             $total = empty($data["fotos"]) ? 0 : count($data['fotos']);
             $data['fotos_total'] = $total;
@@ -164,7 +167,7 @@ class tsCuenta {
     function iFollow($user_id){
         global $tsUser;
         // SEGUIR
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$user_id.'\' AND f_user = \''.(int)$tsUser->uid.'\' AND f_type = \'1\' LIMIT 1');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$user_id.'\' AND f_user = \''.(int)$tsUser->uid.'\' AND f_type = \'1\' LIMIT 1');
 		$data = db_exec('num_rows', $query);
 		
         //
@@ -177,7 +180,7 @@ class tsCuenta {
     function yFollow($user_id){
         global $tsUser;
         // YO LE SIGO?
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$tsUser->uid.'\' AND f_user = \''.(int)$user_id.'\' AND f_type = \'1\' LIMIT 1');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT follow_id FROM u_follows WHERE f_id = \''.(int)$tsUser->uid.'\' AND f_user = \''.(int)$user_id.'\' AND f_type = \'1\' LIMIT 1');
 		$data = db_exec('num_rows', $query);
 		
         //
@@ -189,12 +192,12 @@ class tsCuenta {
     function loadPosts($user_id){
         global $tsUser;
         //
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p.post_id, p.post_title, p.post_puntos, c.c_seo, c.c_img FROM p_posts AS p LEFT JOIN p_categorias AS c ON c.cid = p.post_category WHERE p.post_status = \'0\' AND p.post_user = \''.(int)$user_id.'\' ORDER BY p.post_date DESC LIMIT 18');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT p.post_id, p.post_title, p.post_puntos, c.c_seo, c.c_img FROM p_posts AS p LEFT JOIN p_categorias AS c ON c.cid = p.post_category WHERE p.post_status = \'1\' AND p.post_user = \''.(int)$user_id.'\' ORDER BY p.post_date DESC LIMIT 18');
         $data['posts'] = result_array($query);
         $data['total'] = count($data['posts']);
         
         // USUARIO
-        $data['username'] = $tsUser->getUserName($user_id);
+        $data['username'] = $tsUser->getUserData(type: 'name', user: $user_id);
         //
         return $data;
     }
@@ -203,7 +206,7 @@ class tsCuenta {
     */
     function loadMedallas($user_id){
         //
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT m.*, a.* FROM w_medallas AS m LEFT JOIN w_medallas_assign AS a ON a.medal_id = m.medal_id WHERE a.medal_for = \''.(int)$user_id.'\' AND m.m_type = \'1\' ORDER BY a.medal_date DESC');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT m.*, a.* FROM w_medallas AS m LEFT JOIN w_medallas_assign AS a ON a.medal_id = m.medal_id WHERE a.medal_for = \''.(int)$user_id.'\' AND m.m_type = \'1\' ORDER BY a.medal_date DESC');
 		$data['medallas'] = result_array($query);
         $data['total'] = count($data['medallas']);
         
@@ -235,7 +238,7 @@ class tsCuenta {
             //
             $year = date("Y",time());
             // ANTIGUOS DATOS
-				$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT user_dia, user_mes, user_ano, user_pais, user_estado, user_sexo, user_firma FROM U_perfil WHERE user_id = \''.$tsUser->uid.'\' LIMIT 1');
+				$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT user_dia, user_mes, user_ano, user_pais, user_estado, user_sexo, user_firma FROM U_perfil WHERE user_id = \''.$tsUser->uid.'\' LIMIT 1');
             $info = db_exec('fetch_assoc', $query);
             //
             $email_ok = $this->isEmail($perfilData['email']);
@@ -269,7 +272,7 @@ class tsCuenta {
                     $perfilData['firma'] = $info['user_firma'];
                 }
 				elseif($tsUser->info['user_email'] != $perfilData['email']) {
-				    $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT user_id FROM u_miembros WHERE user_email = \''.$tsCore->setSecure($perfilData['email']).'\' LIMIT 1');
+				    $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT user_id FROM u_miembros WHERE user_email = \''.$tsCore->setSecure($perfilData['email']).'\' LIMIT 1');
                     $exists = db_exec('num_rows', $query);
                     
                     if($exists) {
@@ -310,11 +313,14 @@ class tsCuenta {
              elseif(strlen($new_passwd) < 5) return array('error' => 'Contrase&ntilde;a no v&aacute;lida.');
              elseif($new_passwd != $confirm_passwd) return array('error' => 'Tu nueva contrase&ntilde;a debe ser igual a la confirmaci&oacute;n de la misma.');
              else {
-                 $key = md5(md5($passwd).strtolower($tsUser->nick));
-                 if($key != $tsUser->info['user_password']) return array('error' => 'Tu contrase&ntilde;a actual no es correcta.');
+                 // Verificamos contra la columna vigente (user_password_hash) o el md5 legacy
+                 $current = !empty($tsUser->info['user_password_hash']) ? $tsUser->info['user_password_hash'] : $tsUser->info['user_password'];
+                 if(!Password::verify($passwd, strtolower($tsUser->nick), (string)$current)) return array('error' => 'Tu contrase&ntilde;a actual no es correcta.');
                  else {
-                     $new_key = md5(md5($new_passwd).strtolower($tsUser->nick));
-					if(db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_miembros SET user_password = \''.$tsCore->setSecure($new_key).'\' WHERE user_id = \''.$tsUser->uid.'\'')) return true;
+                     // Guardamos el hash vigente y renovamos también el md5 legacy por compatibilidad
+                     $new_key = Password::hash($new_passwd);
+                     $new_legacy = md5(md5($new_passwd).strtolower($tsUser->nick));
+					if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_miembros SET user_password = \''.$tsCore->setSecure($new_legacy).'\', user_password_hash = \''.$tsCore->setSecure($new_key).'\' WHERE user_id = \''.$tsUser->uid.'\'')) return true;
                  }
              }
          break;
@@ -329,23 +335,26 @@ class tsCuenta {
          break;
 			case 'nick': //2678400 es un mes :)
 				$nuevo_nick = htmlspecialchars($_POST['new_nick']);
-            if(db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT id FROM w_blacklist WHERE type = \'4\' && LOWER(value) = \''.$tsCore->setSecure($nuevo_nick).'\' LIMIT 1'))) return array('error' => 'Nick no permitido');
-            if(db_exec('num_rows', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT user_id FROM u_miembros WHERE LOWER(user_name) = \''.$tsCore->setSecure($nuevo_nick).'\' LIMIT 1'))) return array('error' => 'Nombre en uso');
-				$data = db_exec('fetch_assoc', db_exec(array(__FILE__, __LINE__), 'query', 'SELECT id, user_id, time FROM u_nicks WHERE user_id = \''.$tsUser->uid.'\' AND estado = 0 LIMIT 1'));
+            if(db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', 'SELECT id FROM w_blacklist WHERE type = \'4\' && LOWER(value) = \''.$tsCore->setSecure($nuevo_nick).'\' LIMIT 1'))) return array('error' => 'Nick no permitido');
+            if(db_exec('num_rows', db_exec([__FILE__, __LINE__], 'query', 'SELECT user_id FROM u_miembros WHERE LOWER(user_name) = \''.$tsCore->setSecure($nuevo_nick).'\' LIMIT 1'))) return array('error' => 'Nombre en uso');
+				$data = db_exec('fetch_assoc', db_exec([__FILE__, __LINE__], 'query', 'SELECT id, user_id, time FROM u_nicks WHERE user_id = \''.$tsUser->uid.'\' AND estado = 0 LIMIT 1'));
 				if(!empty($data['id'])) return array('error' => 'Ya tiene una petici&oacute;n  de cambio en curso');
-				elseif(time() - $data['time'] >= 31536000) db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_miembros SET user_name_changes = \'3\' WHERE user_id = \''.$data['user_id'].'\'');
-				$key = md5(md5($_POST['password']).strtolower($tsUser->nick)); 
-				if($key != $tsUser->info['user_password']) return array('error' => 'Tu contrase&ntilde;a actual no es correcta.');
+				elseif(time() - $data['time'] >= 31536000) db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_miembros SET user_name_changes = \'3\' WHERE user_id = \''.$data['user_id'].'\'');
+				// Verificamos la contraseña actual (columna vigente o md5 legacy)
+				$current = !empty($tsUser->info['user_password_hash']) ? $tsUser->info['user_password_hash'] : $tsUser->info['user_password'];
+				if(!Password::verify($_POST['password'], strtolower($tsUser->nick), (string)$current)) return array('error' => 'Tu contrase&ntilde;a actual no es correcta.');
                 else {		
 				$email_ok = $this->isEmail($_POST['pemail']);
 				if(!$email_ok) return array('field' => 'email', 'error' => 'El formato de email ingresado no es v&aacute;lido.');
 				$email = empty($_POST['pemail']) ? $tsUser->info['user_email'] : $_POST['pemail'];
 				if(strlen($nuevo_nick) < 4 || strlen($nuevo_nick) > 16) return array('error' => 'El nick debe tener entre 4 y 16 car&aacute;cteres');
 				if(!preg_match('/^([A-Za-z0-9]+)$/', $nuevo_nick)) return array('error' => 'El nick debe ser alfanum&eacute;rico');
+				# md5 legacy con el NUEVO nick: solo lo usa el admin al aprobar cuentas antiguas
+				# (las cuentas modernas conservan user_password_hash, que no depende del nick)
 				$key = md5(md5($_POST['password']).strtolower($nuevo_nick));
 				$_SERVER['REMOTE_ADDR'] = $_SERVER['X_FORWARDED_FOR'] ? $_SERVER['X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
                 if(!filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)) return array('error' => 'Su IP no se pudo validar');
-				if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO `u_nicks` (`user_id`, `user_email`, `name_1`, `name_2`, `hash`, `time`, `ip`) VALUES (\''.$tsUser->uid.'\', \''.$tsCore->setSecure($email).'\', \''.$tsUser->nick.'\', \''.$tsCore->setSecure($nuevo_nick).'\', \''.$key.'\', \''.time().'\', \''.$tsCore->setSecure($_SERVER['REMOTE_ADDR']).'\')')) return array('error' => 'Proceso iniciado, recibir&aacute; la respuesta en el correo indicado cuando valoremos el cambio.');
+				if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO `u_nicks` (`user_id`, `user_email`, `name_1`, `name_2`, `hash`, `time`, `ip`) VALUES (\''.$tsUser->uid.'\', \''.$tsCore->setSecure($email).'\', \''.$tsUser->nick.'\', \''.$tsCore->setSecure($nuevo_nick).'\', \''.$key.'\', \''.time().'\', \''.$tsCore->setSecure($_SERVER['REMOTE_ADDR']).'\')')) return array('error' => 'Proceso iniciado, recibir&aacute; la respuesta en el correo indicado cuando valoremos el cambio.');
 				}
          break;
 		}
@@ -395,8 +404,8 @@ class tsCuenta {
 	
 	function desCuenta() {
 	global $tsUser, $tsCore;
-	if(db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_miembros SET user_activo = \'0\' WHERE user_id = \''.$tsUser->uid.'\''))
-	 $tsCore->redirectTo($tsCore->settings['url'].'/login-salir.php');
+	if(db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_miembros SET user_activo = \'0\' WHERE user_id = \''.$tsUser->uid.'\''))
+	 $tsCore->navigate('/login-salir.php');
 	 return 1;
 	}
 
@@ -409,22 +418,22 @@ class tsCuenta {
         $auser = $tsCore->setSecure($_POST['user']);
         $bloquear = empty($_POST['bloquear']) ? 0 : 1;
         // EXISTE?
-        $exists = $tsUser->getUserName($auser);
+        $exists = $tsUser->getUserData(type: 'name', user: $auser);
         // SI EXISTE Y NO SOY YO
         if($exists && $tsUser->uid != $auser){
             if($bloquear == 1){
                 // YA BLOQUEADO?
-				$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT bid FROM u_bloqueos WHERE b_user = \''.$tsUser->uid.'\' AND b_auser = \''.(int)$auser.'\' LIMIT 1');
+				$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT bid FROM u_bloqueos WHERE b_user = \''.$tsUser->uid.'\' AND b_auser = \''.(int)$auser.'\' LIMIT 1');
                 $noexists = db_exec('num_rows', $query);
                 
                 // NO HA SIDO BLOQUEADO
                 if(empty($noexists)) {
-				    if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_bloqueos (b_user, b_auser) VALUES (\''.$tsUser->uid.'\', \''.(int)$auser.'\')'))
+				    if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_bloqueos (b_user, b_auser) VALUES (\''.$tsUser->uid.'\', \''.(int)$auser.'\')'))
                     return "1: El usuario fue bloqueado satisfactoriamente."; 
                 } else return '0: Ya has bloqueado a este usuario.';
                 // 
             } else{
-			    if(db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM u_bloqueos WHERE b_user = \''.$tsUser->uid.'\'  AND b_auser = \''.(int)$auser.'\''))
+			    if(db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM u_bloqueos WHERE b_user = \''.$tsUser->uid.'\'  AND b_auser = \''.(int)$auser.'\''))
                 return "1: El usuario fue desbloqueado satisfactoriamente.";
             }
         } else return '0: El usuario seleccionado no existe.';
@@ -435,7 +444,7 @@ class tsCuenta {
     function loadBloqueos(){
         global $tsUser;
         //
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT b.*, u.user_name FROM u_miembros AS u LEFT JOIN u_bloqueos AS b ON u.user_id = b.b_auser WHERE b.b_user = \''.(int)$tsUser->uid.'\'');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT b.*, u.user_name FROM u_miembros AS u LEFT JOIN u_bloqueos AS b ON u.user_id = b.b_auser WHERE b.b_user = \''.(int)$tsUser->uid.'\'');
         $data = result_array($query);
         
         //

@@ -9,7 +9,9 @@ declare(strict_types=1);
 
 defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
 
-require_once TS_UTILS . '/misc/recaptcha.php';
+use DevBroken\Utils\Http\{HttpClient, Response};
+use DevBroken\Utils\Logger\Logger;
+use DevBroken\Utils\Password\Password;
 
 class tsRegistro {
 

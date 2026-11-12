@@ -62,7 +62,7 @@ class tsSmarty extends \Smarty\Smarty
 
 	public function setTheme(string $theme = ''): void {
 		$this->theme = $theme ?: TS_TEMA;
-		$this->setCompileDir(TS_STORAGE . '/cache/' . $theme);
+		$this->setCompileDir(TS_STORAGE . '/cache/' . date('d-m-Y_') . $theme);
 	}
 
 	public function setPage(string $page): void {

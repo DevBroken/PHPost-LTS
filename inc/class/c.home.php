@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
 
+use DevBroken\Utils\Misc\Constants;
+use DevBroken\Utils\Paginator\Paginador;
+
 class tsHome {
 
     protected tsCore $tsCore;

@@ -150,9 +150,7 @@ class tsVisitas {
                 return true;
             }
             // Visita repetida: solo refrescamos fecha/IP de la fila propia
-            db_exec([__FILE__, __LINE__], 'query',
-                "UPDATE `w_visitas` SET `date` = '{$date}', `ip` = '{$ip}'"
-                . " WHERE `for` = '{$id}' AND `type` = '{$code}' AND `user` = '{$uid}' LIMIT 1");
+            db_exec([__FILE__, __LINE__], 'query', "UPDATE `w_visitas` SET `date` = '{$date}', `ip` = '{$ip}' WHERE `for` = '{$id}' AND `type` = '{$code}' AND `user` = '{$uid}' LIMIT 1");
             return false;
         }
 
@@ -180,11 +178,7 @@ class tsVisitas {
         }
         $limit = max(1, (int) $limit);
         $members = $onlyMembers ? ' AND v.user > 0' : '';
-        $query = db_exec([__FILE__, __LINE__], 'query',
-            'SELECT v.*, u.user_id, u.user_name FROM `w_visitas` AS v'
-            . ' LEFT JOIN `u_miembros` AS u ON v.user = u.user_id'
-            . " WHERE v.for = '{$id}' AND v.type = '{$code}'{$members}"
-            . " ORDER BY v.date DESC LIMIT {$limit}");
+        $query = db_exec([__FILE__, __LINE__], 'query', "SELECT v.*, u.user_id, u.user_name FROM `w_visitas` AS v LEFT JOIN `u_miembros` AS u ON v.user = u.user_id WHERE v.for = '{$id}' AND v.type = '{$code}'{$members}  ORDER BY v.date DESC LIMIT {$limit}");
         return result_array($query);
     }
 
@@ -196,9 +190,7 @@ class tsVisitas {
             return 0;
         }
         $members = $onlyMembers ? ' AND v.user > 0' : '';
-        $row = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query',
-            'SELECT COUNT(v.id) FROM `w_visitas` AS v'
-            . " WHERE v.for = '{$id}' AND v.type = '{$code}'{$members}"));
+        $row = db_exec('fetch_row', db_exec([__FILE__, __LINE__], 'query', "SELECT COUNT(v.id) FROM `w_visitas` AS v WHERE v.for = '{$id}' AND v.type = '{$code}'{$members}"));
         return (int) ($row[0] ?? 0);
     }
 
@@ -217,8 +209,7 @@ class tsVisitas {
     private function insert(int $user, int $id, int $code, int $date, string $ip): void
     {
         db_exec([__FILE__, __LINE__], 'query',
-            'INSERT INTO `w_visitas` (`user`, `for`, `type`, `date`, `ip`)'
-            . " VALUES ('{$user}', '{$id}', '{$code}', '{$date}', '{$ip}')");
+            "INSERT INTO `w_visitas` (`user`, `for`, `type`, `date`, `ip`) VALUES ('{$user}', '{$id}', '{$code}', '{$date}', '{$ip}')");
     }
 
     /**
@@ -230,8 +221,7 @@ class tsVisitas {
         if (empty($cfg['table']) || empty($cfg['id']) || empty($cfg['hits'])) {
             return; // Tipo sin contador (p. ej. usuarios)
         }
-        $sql = "UPDATE `{$cfg['table']}` SET `{$cfg['hits']}` = `{$cfg['hits']}` + 1"
-            . " WHERE `{$cfg['id']}` = '{$id}'";
+        $sql = "UPDATE `{$cfg['table']}` SET `{$cfg['hits']}` = `{$cfg['hits']}` + 1  WHERE `{$cfg['id']}` = '{$id}'";
         if ($filterOwner && !empty($cfg['owner'])) {
             $sql .= " AND `{$cfg['owner']}` <> '{$uid}'";
         }

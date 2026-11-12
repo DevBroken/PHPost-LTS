@@ -1,10 +1,14 @@
-<?php if ( ! defined('TS_HEADER')) exit('No se permite el acceso directo al script');
+<?php
+
+declare(strict_types=1);
+
 /**
- * Modelo para el control del muro
- *
- * @name    c.muro.php
- * @author  PHPost Team
+ * @author PHPost Risus LTS
+ * @copyright 2027
  */
+
+defined('TS_HEADER') OR exit('No se permite el acceso directo al script');
+
 class tsMuro {
 	/*
         getPrivacity()
@@ -18,7 +22,7 @@ class tsMuro {
 		if($follow == 0 && $yfollow == 0) $lesigoomesigue = false; else $lesigoomesigue = true;
 		if($follow == 1 && $yfollow == 1) $lesigoymesigue = true; else $lesigoymesigue = false;
         //
-		$query= db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p_configs FROM u_perfil WHERE user_id = \''.(int)$user_id.'\' LIMIT 1');
+		$query= db_exec([__FILE__, __LINE__], 'query', 'SELECT p_configs FROM u_perfil WHERE user_id = \''.(int)$user_id.'\' LIMIT 1');
         $data = db_exec('fetch_assoc', $query);
         
         $data['p_configs'] = unserialize($data['p_configs']);
@@ -165,7 +169,7 @@ class tsMuro {
         $adj = $tsCore->setSecure($_POST['adj'], true);
         $type = $_GET['type'];
         // VALIDAMOS SI EXISTE EL PERFIL/USUARIO
-        $exists = $tsUser->getUserName($pid);
+        $exists = $tsUser->getUserData(type: 'name', user: $pid);
         if(empty($exists)) return '0: El usuario al que intentas comentar no existe.';
         // VERIFICAR QUE PERMITA COMPARTIR EN SU MURO
 		include 'c.cuenta.php';
@@ -185,9 +189,9 @@ class tsMuro {
                 // VACIO?
                 if(strlen($text) <= 0) return '0: Tu publicaci&oacute;n debe tener al menos una letra.';
                 // ANTI FLOOD
-                $tsCore->antiFlood();
+                $tsUser->antiFlood();
                 //				//
-				if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_muro (p_user, p_user_pub, p_body, p_date, p_type, p_ip) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$data.'\', \''.$date.'\', \'1\', \''.$_SERVER['REMOTE_ADDR'].'\') ')){
+				if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_muro (p_user, p_user_pub, p_body, p_date, p_type, p_ip) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$data.'\', \''.$date.'\', \'1\', \''.$_SERVER['REMOTE_ADDR'].'\') ')){
                     $pub_id = db_exec('insert_id');
                     //
                     $type = ($pid == $tsUser->uid) ? 'status' : 'mpub';
@@ -201,12 +205,12 @@ class tsMuro {
                 $foto = $this->ajaxCheck(true, $adj);
                 if(substr($foto,0,1) == '0') return $foto;
                 // ANTI FLOOD
-                $tsCore->antiFlood();
+                $tsUser->antiFlood();
                 // INSERTAMOS
-				if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_muro (p_user, p_user_pub, p_body, p_date, p_type, p_ip) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$tsCore->setSecure($data, true).'\', \''.$date.'\', \'2\', \''.$tsCore->setSecure($_SERVER['REMOTE_ADDR']).'\')')){
+				if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_muro (p_user, p_user_pub, p_body, p_date, p_type, p_ip) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$tsCore->setSecure($data, true).'\', \''.$date.'\', \'2\', \''.$tsCore->setSecure($_SERVER['REMOTE_ADDR']).'\')')){
                     $pub_id = db_exec('insert_id');
                     // INSERTAR ADJUNTO
-					if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_muro_adjuntos (pub_id, a_url, a_img) VALUES (\''.(int)$pub_id.'\', \''.$tsCore->setSecure($foto, true).'\', \''.$tsCore->setSecure($foto, true).'\') ')){
+					if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_muro_adjuntos (pub_id, a_url, a_img) VALUES (\''.(int)$pub_id.'\', \''.$tsCore->setSecure($foto, true).'\', \''.$tsCore->setSecure($foto, true).'\') ')){
                         $type = 'mfoto';
                         // RETORNAMOS DATOS PARA EL TEMPLATE
                         $return = array('pub_id' => $pub_id, 'p_user' => $pid, 'p_user_pub' => $tsUser->uid, 'p_body' => $tsCore->setMenciones($data), 'p_date' => $date, 'p_likes' => 0, 'p_type' => 2, 'likes' => array('link' => 'Me gusta'), 'a_url' => $foto, 'a_img' => $foto);   
@@ -218,12 +222,12 @@ class tsMuro {
                 // VALIDAR
                 $enlace = $this->ajaxCheck(true, $adj);
                 // ANTI FLOOD
-                $tsCore->antiFlood();
+                $tsUser->antiFlood();
                 // INSERTAR
-				if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_muro (p_user, p_user_pub, p_body, p_date, p_type, p_ip) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$data.'\', \''.$date.'\', \'3\', \''.$_SERVER['REMOTE_ADDR'].'\' ) ')){
+				if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_muro (p_user, p_user_pub, p_body, p_date, p_type, p_ip) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$data.'\', \''.$date.'\', \'3\', \''.$_SERVER['REMOTE_ADDR'].'\' ) ')){
                     $pub_id = db_exec('insert_id');
                     // INSERTAR ADJUNTO
-                    if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_muro_adjuntos (pub_id, a_title, a_url) VALUES (\''.(int)$pub_id.'\', \''.$tsCore->setSecure($tsCore->parseBadWords($enlace['title']), true).'\', \''.$tsCore->setSecure($tsCore->parseBadWords($enlace['url']), true).'\') ')){
+                    if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_muro_adjuntos (pub_id, a_title, a_url) VALUES (\''.(int)$pub_id.'\', \''.$tsCore->setSecure($tsCore->parseBadWords($enlace['title']), true).'\', \''.$tsCore->setSecure($tsCore->parseBadWords($enlace['url']), true).'\') ')){
                         $type = 'mlink';
                         // RETORNAMOS DATOS PARA EL TEMPLATE
                         $return = array('pub_id' => $pub_id, 'p_user' => $pid, 'p_user_pub' => $tsUser->uid, 'p_body' => $tsCore->setMenciones($data), 'p_date' => $date, 'p_likes' => 0, 'p_type' => 3, 'likes' => array('link' => 'Me gusta'), 'a_title' => $enlace['title'], 'a_url' => $enlace['url']);   
@@ -235,12 +239,12 @@ class tsMuro {
                 // VALIDAR
                 $video = $this->ajaxCheck(true, $adj);
                 // ANTI FLOOD
-                $tsCore->antiFlood();
+                $tsUser->antiFlood();
                 // INSERTAR
-				if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_muro (p_user, p_user_pub, p_body, p_date, p_type, p_ip) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$tsCore->setSecure($data, true).'\', \''.$date.'\', \'4\', \''.$tsCore->setSecure($_SERVER['REMOTE_ADDR']).'\') ')){
+				if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_muro (p_user, p_user_pub, p_body, p_date, p_type, p_ip) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$tsCore->setSecure($data, true).'\', \''.$date.'\', \'4\', \''.$tsCore->setSecure($_SERVER['REMOTE_ADDR']).'\') ')){
                     $pub_id = db_exec('insert_id');
                     // INSERTAR ADJUNTO
-					if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_muro_adjuntos (pub_id, a_title, a_url, a_img, a_desc) VALUES (\''.(int)$pub_id.'\', \''.$tsCore->setSecure($tsCore->parseBadWords($video['title']), true).'\', \''.$video['ID'].'\', \'\', \''.$tsCore->setSecure($tsCore->parseBadWords($video['desc']), true).'\') ')){
+					if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_muro_adjuntos (pub_id, a_title, a_url, a_img, a_desc) VALUES (\''.(int)$pub_id.'\', \''.$tsCore->setSecure($tsCore->parseBadWords($video['title']), true).'\', \''.$video['ID'].'\', \'\', \''.$tsCore->setSecure($tsCore->parseBadWords($video['desc']), true).'\') ')){
                         $type = 'mvideo';
                         // RETORNAMOS DATOS PARA EL TEMPLATE
                         $return = array('pub_id' => $pub_id, 'p_user' => $pid, 'p_user_pub' => $tsUser->uid, 'p_body' => $tsCore->setMenciones($data), 'p_date' => $date, 'p_likes' => 0, 'p_type' => 4, 'likes' => array('link' => 'Me gusta'), 'a_title' => $video['title'], 'a_url' => $video['ID'], 'a_desc' => $video['desc']);   
@@ -271,7 +275,7 @@ class tsMuro {
         $data = $tsCore->setSecure($tsCore->parseBadWords($_POST['data']));
         $pid = intval($_POST['pid']);
         //
-       $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `p_user`, `p_user_pub` FROM `u_muro` WHERE `pub_id` = \''.(int)$pid.'\' LIMIT 1');
+       $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT `p_user`, `p_user_pub` FROM `u_muro` WHERE `pub_id` = \''.(int)$pid.'\' LIMIT 1');
        $pub = db_exec('fetch_assoc', $query);
         
         //
@@ -280,11 +284,11 @@ class tsMuro {
             $text = str_replace(array("\n","\t",' '),"",$data);
             if(strlen($text) <= 0) return '0: Tu comentario debe tener al menos una letra.';
             // ANTI FLOOD
-            $tsCore->antiFlood();
+            $tsUser->antiFlood();
             // CONTINUAMOS
             $date = time();
 			$_SERVER['REMOTE_ADDR'] = $_SERVER['X_FORWARDED_FOR'] ? $_SERVER['X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
-            if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO `u_muro_comentarios` (`pub_id`, `c_user`, `c_date`, `c_body`, `c_ip`) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$date.'\', \''.$tsCore->setSecure($data, true).'\', \''.$_SERVER['REMOTE_ADDR'].'\')')){
+            if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO `u_muro_comentarios` (`pub_id`, `c_user`, `c_date`, `c_body`, `c_ip`) VALUES (\''.(int)$pid.'\', \''.$tsUser->uid.'\', \''.$date.'\', \''.$tsCore->setSecure($data, true).'\', \''.$_SERVER['REMOTE_ADDR'].'\')')){
                 $cid = db_exec('insert_id');
                 // MONITOR
                 $tsMonitor->setMuroRepost($pid, $pub['p_user'], $pub['p_user_pub']);
@@ -292,7 +296,7 @@ class tsMuro {
                 $is_my = ($pub['p_user'] == $tsUser->uid) ? 1 : 3;
                 $tsActividad->setActividad(10, $cid, $is_my);
                 // UPDATES
-                db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE `u_muro` SET `p_comments` = p_comments + 1 WHERE `pub_id` = \''.(int)$pid.'\'');
+                db_exec([__FILE__, __LINE__], 'query', 'UPDATE `u_muro` SET `p_comments` = p_comments + 1 WHERE `pub_id` = \''.(int)$pid.'\'');
                 // PARA LA PANTILLA
                 return array('cid' => $cid, 'c_body' => $tsCore->parseBadWords($data, true), 'c_date' => $date, 'c_user' => $tsUser->uid, 'c_likes' => 0, 'like' => 'Me gusta','user_name' => $tsUser->nick);
             } else return '0: '.show_error('Error al ejecutar la consulta de la l&iacute;nea '.__LINE__.' de '.__FILE__.'.', 'db');
@@ -307,7 +311,7 @@ class tsMuro {
         // SOLO MOSTRAREMOS LAS ULTIMAS 100 PUBLICACIONES
         if($start > 90) return array('total' => '-1');
         // SEGUIDORES
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT f_id FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' AND f_type = \'1\'');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT f_id FROM u_follows WHERE f_user = \''.$tsUser->uid.'\' AND f_type = \'1\'');
         $follows = result_array($query);
         
         // ORDENAMOS 
@@ -320,7 +324,7 @@ class tsMuro {
         $amigos[] = "'$tsUser->uid'";
         $amigos = implode(', ',$amigos);
         // OBTENEMOS LAS ULTIMAS PUBLICACIONES
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p.*, u.user_name FROM u_muro AS p LEFT JOIN u_miembros AS u ON p.p_user_pub = u.user_id WHERE p.p_user IN('.$amigos.') AND p.p_user = p.p_user_pub ORDER BY p.p_date DESC LIMIT '.$start.','.$limit);
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT p.*, u.user_name FROM u_muro AS p LEFT JOIN u_miembros AS u ON p.p_user_pub = u.user_id WHERE p.p_user IN('.$amigos.') AND p.p_user = p.p_user_pub ORDER BY p.p_date DESC LIMIT '.$start.','.$limit);
         while($row = db_exec('fetch_array', $query)){
             // CARGAR LIKES
             if($row['p_likes'] > 0){
@@ -334,7 +338,7 @@ class tsMuro {
             $row['p_body'] = $tsCore->parseBadWords($tsCore->setMenciones($row['p_body']), true);
             // CARGAR ADJUNTOS
             if($row['p_type'] != 1){
-                $queryDos = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT * FROM u_muro_adjuntos WHERE pub_id = \''.$row['pub_id'].'\' LIMIT 1');
+                $queryDos = db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM u_muro_adjuntos WHERE pub_id = \''.$row['pub_id'].'\' LIMIT 1');
                 $adj = db_exec('fetch_assoc', $queryDos);
                 
                 //
@@ -353,7 +357,7 @@ class tsMuro {
     function getWall($user_id, $start = 0){
         global $tsCore;
         // PUBLICACION
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p.*, u.user_name FROM u_muro AS p LEFT JOIN u_miembros AS u ON p.p_user_pub = u.user_id WHERE p.p_user = \''.(int)$user_id.'\' ORDER BY p.pub_id DESC LIMIT '.$start.',10');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT p.*, u.user_name FROM u_muro AS p LEFT JOIN u_miembros AS u ON p.p_user_pub = u.user_id WHERE p.p_user = \''.(int)$user_id.'\' ORDER BY p.pub_id DESC LIMIT '.$start.',10');
         while($row = db_exec('fetch_array', $query)){
             // CARGAR LIKES
             if($row['p_likes'] > 0){
@@ -367,7 +371,7 @@ class tsMuro {
             $row['p_body'] = $tsCore->parseBadWords($tsCore->parseSmiles($tsCore->setMenciones($row['p_body'])), true);
             // CARGAR ADJUNTOS
             if($row['p_type'] != 1){
-                $queryDos = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT * FROM u_muro_adjuntos WHERE pub_id = \''.$row['pub_id'].'\' LIMIT 1');
+                $queryDos = db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM u_muro_adjuntos WHERE pub_id = \''.$row['pub_id'].'\' LIMIT 1');
                 $adj = db_exec('fetch_assoc', $queryDos);
                 
                 //
@@ -392,7 +396,7 @@ class tsMuro {
                 $i_like = false;
                 // VEMOS SI ME GUSTA
                 if($tsUser->is_member){
-                    $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `like_id` FROM `u_muro_likes` WHERE `user_id` = \''.$tsUser->uid.'\' AND `obj_id` = \''.(int)$pub_id.'\' AND obj_type = \'1\'');
+                    $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT `like_id` FROM `u_muro_likes` WHERE `user_id` = \''.$tsUser->uid.'\' AND `obj_id` = \''.(int)$pub_id.'\' AND obj_type = \'1\'');
                     $i_like = db_exec('num_rows', $query);
                        
                 }
@@ -402,7 +406,7 @@ class tsMuro {
                         $data['link'] = 'Ya no me gusta';
                         $data['text'] = 'Te gusta esto.';   
                     }else {
-                        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT u.user_name FROM u_muro_likes AS l LEFT JOIN u_miembros AS u ON l.user_id = u.user_id  WHERE l.obj_id = \''.(int)$pub_id.'\' AND l.obj_type = \'1\'');
+                        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT u.user_name FROM u_muro_likes AS l LEFT JOIN u_miembros AS u ON l.user_id = u.user_id  WHERE l.obj_id = \''.(int)$pub_id.'\' AND l.obj_type = \'1\'');
                         $u_like = db_exec('fetch_assoc', $query);
                         
                         //
@@ -412,7 +416,7 @@ class tsMuro {
                     if($i_like){
                         $data['link'] = 'Ya no me gusta';
                         //
-                        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT u.user_name FROM u_muro_likes AS l LEFT JOIN u_miembros AS u ON l.user_id = u.user_id  WHERE l.user_id != \''.$tsUser->uid.'\' AND l.obj_id = \''.(int)$pub_id.'\' AND l.obj_type = 1');
+                        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT u.user_name FROM u_muro_likes AS l LEFT JOIN u_miembros AS u ON l.user_id = u.user_id  WHERE l.user_id != \''.$tsUser->uid.'\' AND l.obj_id = \''.(int)$pub_id.'\' AND l.obj_type = 1');
                         $u_like = db_exec('fetch_assoc', $query);
                         
                         //
@@ -432,14 +436,14 @@ class tsMuro {
             case 'comments':
                 $limit = ($likes > 0) ? "LIMIT {$likes}" : '';
                 //
-                $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT c.*, u.user_name FROM u_muro_comentarios AS c LEFT JOIN u_miembros AS u ON c.c_user = u.user_id WHERE c.pub_id = \''.(int)$pub_id.'\' ORDER BY c.c_date DESC '.$limit.'');
+                $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT c.*, u.user_name FROM u_muro_comentarios AS c LEFT JOIN u_miembros AS u ON c.c_user = u.user_id WHERE c.pub_id = \''.(int)$pub_id.'\' ORDER BY c.c_date DESC '.$limit.'');
                 while($row = db_exec('fetch_array', $query)){
                     $row['c_body'] = $tsCore->parseBadWords($tsCore->parseSmiles($tsCore->setMenciones($row['c_body'])), true);
                     $row['like'] = 'Me gusta';
                     // ME GUSTA?
                     if($row['c_likes'] > 0){
                         //
-                        $cuery = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `like_id` FROM `u_muro_likes` WHERE `user_id` = \''.$tsUser->uid.'\' AND `obj_id` = \''.$row['cid'].'\' AND `obj_type` = \'2\'');
+                        $cuery = db_exec([__FILE__, __LINE__], 'query', 'SELECT `like_id` FROM `u_muro_likes` WHERE `user_id` = \''.$tsUser->uid.'\' AND `obj_id` = \''.$row['cid'].'\' AND `obj_type` = \'2\'');
                         $i_like = db_exec('num_rows', $cuery);
                         
                         if($i_like > 0) $row['like'] = 'Ya no me gusta';
@@ -464,7 +468,7 @@ class tsMuro {
     function getStory($pub_id, $user_id){
         global $tsUser;
         // ELEGIMOS
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT p.*, u.user_name FROM u_muro AS p LEFT JOIN u_miembros AS u ON p.p_user_pub = u.user_id WHERE p.pub_id = \''.(int)$pub_id.'\' LIMIT 1');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT p.*, u.user_name FROM u_muro AS p LEFT JOIN u_miembros AS u ON p.p_user_pub = u.user_id WHERE p.pub_id = \''.(int)$pub_id.'\' LIMIT 1');
         $pub = db_exec('fetch_assoc', $query);
         
         // COMPROBAMOS
@@ -482,7 +486,7 @@ class tsMuro {
         $pub['hide_more_cm'] = true;
         // ADJUNTOS
         if($pub['p_type'] != 1){
-            $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT * FROM u_muro_adjuntos WHERE pub_id = \''.(int)$pub_id.'\' LIMIT 1');
+            $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT * FROM u_muro_adjuntos WHERE pub_id = \''.(int)$pub_id.'\' LIMIT 1');
             $adj = db_exec('fetch_assoc', $query);
             
             $data = array_merge($pub,$adj);
@@ -498,7 +502,7 @@ class tsMuro {
         //
         $pid = (int) $_POST['pid'];
         // EXISTE?
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `p_user`, `p_comments` FROM `u_muro` WHERE `pub_id` = \''.$pid.'\' LIMIT 1');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT `p_user`, `p_comments` FROM `u_muro` WHERE `pub_id` = \''.$pid.'\' LIMIT 1');
         $cmts = db_exec('fetch_assoc', $query);
         
         //
@@ -523,28 +527,28 @@ class tsMuro {
         switch($type){
             case 'pub':
                 // DATOS -robert
-                $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `p_user`, `p_user_pub` FROM `u_muro` WHERE `pub_id` = \''.(int)$id.'\' LIMIT 1');
+                $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT `p_user`, `p_user_pub` FROM `u_muro` WHERE `pub_id` = \''.(int)$id.'\' LIMIT 1');
                 $data = db_exec('fetch_assoc', $query);
                 
                 //
                 if(!empty($data['p_user'])){
                     // SI ES EL DUEÑO DEL MURO O DE LA PUBLICACION...
                     if($data['p_user'] == $tsUser->uid || $data['p_user_pub'] == $tsUser->uid || $tsUser->is_admod || $tsUser->permisos['moepm']){
-                       if(db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM `u_muro` WHERE `pub_id` = \''.(int)$id.'\'')){
+                       if(db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM `u_muro` WHERE `pub_id` = \''.(int)$id.'\'')){
                             // BORRAMOS LOS LIKES DE LA PUBLICACION
-                           db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM `u_muro_likes` WHERE `obj_id` = \''.(int)$id.'\' AND `obj_type` = \'1\'');
+                           db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM `u_muro_likes` WHERE `obj_id` = \''.(int)$id.'\' AND `obj_type` = \'1\'');
                             // BORRAMOS LOS LIKES DE TODOS LOS COMENTARIOS
-                           $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT `cid` FROM `u_muro_comentarios` WHERE `pub_id` = \''.(int)$id.'\'');
+                           $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT `cid` FROM `u_muro_comentarios` WHERE `pub_id` = \''.(int)$id.'\'');
                             $cmnts = result_array($query);
                             
                             // IDS A BORRAR
                             foreach($cmnts as $key => $val){
                                 $delete_ids .= $val['cid'].', ';
                             }
-                            db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM `u_muro_likes` WHERE `obj_id` IN (\''.$delete_ids.'\') AND `obj_type` = \'2\'');
+                            db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM `u_muro_likes` WHERE `obj_id` IN (\''.$delete_ids.'\') AND `obj_type` = \'2\'');
                             // BORRAR COMENTARIOS
-                            db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM `u_muro_comentarios` WHERE `pub_id` = \''.(int)$id.'\'');
-                            db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM `u_muro_adjuntos` WHERE `pub_id` = \''.(int)$id.'\'');
+                            db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM `u_muro_comentarios` WHERE `pub_id` = \''.(int)$id.'\'');
+                            db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM `u_muro_adjuntos` WHERE `pub_id` = \''.(int)$id.'\'');
                             //
                             return '1: OK';
                         } else return '0: Error';
@@ -554,17 +558,17 @@ class tsMuro {
             // ELIMINAR COMENTARIO
             case 'cmt':
                 // DATOS
-                $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT c.cid, c.c_user, p.pub_id, p.p_user FROM u_muro_comentarios AS c LEFT JOIN u_muro AS p ON c.pub_id = p.pub_id WHERE c.cid = \''.(int)$id.'\' LIMIT 1');
+                $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT c.cid, c.c_user, p.pub_id, p.p_user FROM u_muro_comentarios AS c LEFT JOIN u_muro AS p ON c.pub_id = p.pub_id WHERE c.cid = \''.(int)$id.'\' LIMIT 1');
                 $data = db_exec('fetch_assoc', $query);
                 
                 //
                 if(!empty($data['cid'])){
                     // SI ES EL DUEÑO DEL MURO O DEL COMENTARIO...
                     if($data['p_user'] == $tsUser->uid || $data['c_user'] == $tsUser->uid  || $tsUser->is_admod || $tsUser->permisos['moecm']){
-                        if(db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM `u_muro_comentarios` WHERE `cid` = \''.(int)$id.'\'')){
+                        if(db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM `u_muro_comentarios` WHERE `cid` = \''.(int)$id.'\'')){
                             // UPDATES
-                            db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM `u_muro_likes` WHERE `obj_id` = \''.(int)$id.'\' AND `obj_type` = \'2\'');
-                            db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE `u_muro` SET `p_comments` = p_comments - 1 WHERE `pub_id` = \''.$data['pub_id'].'\'');
+                            db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM `u_muro_likes` WHERE `obj_id` = \''.(int)$id.'\' AND `obj_type` = \'2\'');
+                            db_exec([__FILE__, __LINE__], 'query', 'UPDATE `u_muro` SET `p_comments` = p_comments - 1 WHERE `pub_id` = \''.$data['pub_id'].'\'');
                             //
                             return '1: Ok';
                         }
@@ -579,7 +583,7 @@ class tsMuro {
    function likePost(){
         global $tsUser, $tsCore, $tsMonitor, $tsActividad;
         // ANTI FLOOD
-        $text = $tsCore->antiFlood(false, 'like', 'No te pueden gustar tantas cosas en tan poco tiempo.');
+        $text = $tsUser->antiFlood(false, 'like', 'No te pueden gustar tantas cosas en tan poco tiempo.');
         if($text != 1) return array('status' => 'error', 'text' => $text);
         //
         $id = (int)$_POST['id'];
@@ -587,13 +591,13 @@ class tsMuro {
         $status = 'ok';
         // EXISTE O NO
         $sql = ($type == 1) ? "SELECT p_user AS uid FROM u_muro WHERE pub_id = {$id}" : "SELECT c_user AS uid FROM u_muro_comentarios WHERE cid = {$id}";
-        $query = db_exec(array(__FILE__, __LINE__), 'query', $sql);
+        $query = db_exec([__FILE__, __LINE__], 'query', $sql);
         $exists = db_exec('fetch_assoc', $query);
         
         
         if(empty($exists['uid'])) return '0: La publicaci&oacute;n ya no existe.';
         // CHECAMOS SI YA LE GUSTA ESTO
-		$query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT like_id, user_id FROM u_muro_likes WHERE obj_id = \''.(int)$id.'\' AND obj_type = \''.(int)$type.'\'');
+		$query = db_exec([__FILE__, __LINE__], 'query', 'SELECT like_id, user_id FROM u_muro_likes WHERE obj_id = \''.(int)$id.'\' AND obj_type = \''.(int)$type.'\'');
         $likes = result_array($query);
         
         $total = count($likes);
@@ -604,14 +608,14 @@ class tsMuro {
         }
         // SI AUN NO ME GUSTA
         if(empty($i_like)){
-			if(db_exec(array(__FILE__, __LINE__), 'query', 'INSERT INTO u_muro_likes (user_id, obj_id, obj_type) VALUES (\''.$tsUser->uid.'\', \''.(int)$id.'\', \''.(int)$type.'\')')){
+			if(db_exec([__FILE__, __LINE__], 'query', 'INSERT INTO u_muro_likes (user_id, obj_id, obj_type) VALUES (\''.$tsUser->uid.'\', \''.(int)$id.'\', \''.(int)$type.'\')')){
                 // SUMAR LIKE
                 if($type == 1) {
-					db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_muro SET p_likes = p_likes + 1 WHERE pub_id = \''.(int)$id.'\'');
+					db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_muro SET p_likes = p_likes + 1 WHERE pub_id = \''.(int)$id.'\'');
                     $ac_type = ($exists['uid'] == $tsUser->uid) ? 0 : 2; 
                 }
                 else {
-					db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_muro_comentarios SET c_likes = c_likes + 1 WHERE cid = \''.(int)$id.'\'');
+					db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_muro_comentarios SET c_likes = c_likes + 1 WHERE cid = \''.(int)$id.'\'');
                     $ac_type = ($exists['uid'] == $tsUser->uid) ? 1 : 3;
                 }
                 // MONITOR
@@ -622,10 +626,10 @@ class tsMuro {
             } else $status = 'error';
         }
         else {
-			if(db_exec(array(__FILE__, __LINE__), 'query', 'DELETE FROM u_muro_likes WHERE like_id = \''.(int)$i_like.'\'')){
+			if(db_exec([__FILE__, __LINE__], 'query', 'DELETE FROM u_muro_likes WHERE like_id = \''.(int)$i_like.'\'')){
                 // RESTAR LIKE
-				if($type == 1) db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_muro SET p_likes = p_likes - 1 WHERE pub_id = \''.(int)$id.'\'');
-                else db_exec(array(__FILE__, __LINE__), 'query', 'UPDATE u_muro_comentarios SET c_likes = c_likes - 1 WHERE cid = \''.(int)$id.'\'');
+				if($type == 1) db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_muro SET p_likes = p_likes - 1 WHERE pub_id = \''.(int)$id.'\'');
+                else db_exec([__FILE__, __LINE__], 'query', 'UPDATE u_muro_comentarios SET c_likes = c_likes - 1 WHERE cid = \''.(int)$id.'\'');
             }
             else $status = 'error';
         }
@@ -654,7 +658,7 @@ class tsMuro {
         $id = intval($_POST['id']);
         $type = ($_POST['type'] == 'com') ? 2 : 1;
         //
-        $query = db_exec(array(__FILE__, __LINE__), 'query', 'SELECT l.user_id, u.user_name FROM u_muro_likes AS l LEFT JOIN u_miembros AS u ON l.user_id = u.user_id WHERE obj_id = \''.(int)$id.'\' AND obj_type = \''.(int)$type.'\'');
+        $query = db_exec([__FILE__, __LINE__], 'query', 'SELECT l.user_id, u.user_name FROM u_muro_likes AS l LEFT JOIN u_miembros AS u ON l.user_id = u.user_id WHERE obj_id = \''.(int)$id.'\' AND obj_type = \''.(int)$type.'\'');
         $data = result_array($query);
         
         //
