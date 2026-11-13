@@ -7,6 +7,7 @@ namespace DevBroken\Utils\Logger;
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
+ * @license MIT
  */
 
 class Logger {

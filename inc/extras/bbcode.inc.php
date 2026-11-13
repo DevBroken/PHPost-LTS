@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
+ * @license MIT
  */
 
 require_once dirname(__DIR__, 1) . '/libs/JBBCode/Parser.php';

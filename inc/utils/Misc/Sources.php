@@ -9,6 +9,7 @@ use DevBroken\Utils\Misc\CssCompiler;
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
+ * @license MIT
  */
 
 if (!defined('TS_HEADER')) {

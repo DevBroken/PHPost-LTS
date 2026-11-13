@@ -29,6 +29,7 @@ declare(strict_types=1);
  *
  * @author PHPost Risus LTS
  * @copyright 2027
+ * @license MIT
  */
 
 defined('TS_HEADER') OR exit('No se permite el acceso directo al script');

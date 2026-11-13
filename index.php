@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
+ * @license MIT
  */
 
 // Chequeamos que este instalado antes de continuar

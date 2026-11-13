@@ -13,6 +13,7 @@ use RuntimeException;
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
+ * @license MIT
  */
 
 class Database {

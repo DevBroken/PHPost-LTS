@@ -11,6 +11,7 @@ declare(strict_types=1);
  *
  * @author PHPost Risus LTS
  * @copyright 2027
+ * @license MIT
  */
 
 // Restricción de seguridad: Previene la ejecución directa desde el navegador

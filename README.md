@@ -3,7 +3,7 @@
 ![PHP Version](https://img.shields.io/badge/PHP-8.5.12--1-617CBE?style=plastic)
 ![Smarty Version](https://img.shields.io/badge/Smarty-5.8.4-E99521?style=plastic)
 ![Database](https://shields.io/badge/Database-MySQLi-2092B3?style=plastic)
-![License](https://shields.io/badge/Licencia-MIT-323232?style=plastic)
+[![License](https://img.shields.io/badge/Licencia-MIT-323232?style=plastic)](LICENSE)
 
 **PHPost Risus LTS** es una plataforma de comunidad y marcadores sociales inspirada en el clásico estilo de redes como *Taringa!*. Cuenta con sistemas completos de publicaciones, fotos, muros, mensajería privada, rangos, medallas y un panel avanzado de moderación.
 
@@ -63,3 +63,15 @@ Si vienes de una versión anterior de PHPost Risus, puedes migrar de forma segur
 ---
 
 > ⚠️ **Nota de Seguridad:** Si descubres una vulnerabilidad crítica de seguridad, te solicitamos reportarla de manera privada a los mantenedores antes de hacerla pública.
+
+---
+
+## Licencia
+
+Distribuido bajo **MIT** — ver [`LICENSE`](LICENSE).
+
+La licencia permite usar, modificar y redistribuir el software, incluso con
+fines comerciales, conservando el aviso de copyright y el texto de la licencia.
+
+Los créditos visibles, las marcas del proyecto y las licencias de las
+bibliotecas incluidas se detallan en [`ATTRIBUTION.md`](ATTRIBUTION.md).

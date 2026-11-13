@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @author PHPost Risus LTS
  * @copyright 2027
+ * @license MIT
  */
 
 $parrafo = "font-family:Arial,sans-serif;font-size:16px;color:#444;line-height:1.7;margin:8px 0;";
