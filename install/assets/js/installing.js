@@ -25,6 +25,7 @@
                 'X-Requested-With':'XMLHttpRequest'
             }
         });
+
         const response = await request.json().catch(() => {
             return {
                 ok:false,

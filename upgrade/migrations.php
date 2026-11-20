@@ -33,7 +33,7 @@ if (!defined('TS_HEADER')) {
 // columnas JSON del esquema). Cada job AJAX del upgrade es una petición HTTP
 // aparte, así que no podemos depender de que otra función lo haya cargado antes
 // (el job "indexes" llamaba a phpostSchemaCaps() sin que estuviese definida).
-require_once dirname(__DIR__, 1) . '/inc/utils/database/collections.php';
+require_once dirname(__DIR__, 1) . '/inc/utils/Database/collections.php';
 
 /** Columnas IP a migrar: [tabla, columna] */
 const UPGRADE_IP_COLUMNS = [

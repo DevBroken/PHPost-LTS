@@ -8,6 +8,8 @@ declare(strict_types=1);
  * @license MIT
  */
 
+use DevBroken\Utils\Password\Password;
+
 defined('TS_HEADER') OR define('TS_HEADER', TRUE);
 
 define('ABSPATH',       dirname(__DIR__, 1));
@@ -168,20 +170,22 @@ switch ($step) {
 
 		$started = 2;
 		$permisos = [];
+
 		foreach ([FS_CONFIG => false, TS_AVATAR => true, TS_UPLOADS => true, TS_CACHE => true] as $dir => $bool) {
 			$exists = $bool ? is_dir($dir) : file_exists($dir);
-			$perm = $bool ? 0750 : 0644;
+			$perm = $bool ? 0755 : 0644;
 			if (!$exists) {
-				$exists = $bool ? mkdir($dir, 0750, true) : copy(FS_EXAMPLE, FS_CONFIG);
+				$exists = $bool ? @mkdir($dir, $perm, true) : @copy(FS_EXAMPLE, FS_CONFIG);
 				if ($exists) {
-					chmod($dir, $perm);
+					@chmod($dir, $perm);
 				}
 			}
+			$writable = $exists && is_writable($dir);
 			$permisos[basename($dir)] = [
 				'name' => ucfirst(basename($dir)),
 				'path' => str_replace(ABSPATH, '..', $dir),
-				'css'  => $exists ? 'success' : 'danger',
-				'text' => $exists ? 'OK' : 'NO'
+				'css'  => $writable ? 'success' : 'danger',
+				'text' => $writable ? 'OK' : 'NO'
 			];
 		}
 
@@ -394,8 +398,8 @@ switch ($step) {
 					throw new Exception('Sin conexión: ' . (is_string($tmp) ? $tmp : 'error'));
 				}
 				$collections = [];
-				require_once dirname(__DIR__, 1) . '/inc/utils/database/collections.php';
-				require_once dirname(__DIR__, 1) . '/inc/utils/password/password.php';
+				require_once dirname(__DIR__, 1) . '/inc/utils/Database/collections.php';
+				require_once dirname(__DIR__, 1) . '/inc/utils/Password/Password.php';
 				if($job === 'table') {
 					if(!isset($collections[$name])) {
 						throw new Exception("Tabla desconocida: {$name}");
@@ -613,6 +617,21 @@ switch ($step) {
 
 						<!-- PERMISOS DE ESCRITURA NECESARIA  -->
 						<legend>Permisos de escritura</legend>
+						<?php if (!$continue): ?>
+						    <div class="alert">
+						        <div>
+						            <strong class="alert-title">No se pudieron crear automáticamente los siguientes elementos:</strong>
+						            <p class="alert-desc" style="margin: 0.5rem 0;">
+						                Tu servidor restringe la escritura automática. Para continuar, entra a tu panel de hosting (o por FTP) y realiza estos pasos en los elementos marcados en rojo:
+						            </p>
+						            <div class="alert-desc">
+						                <p><strong>Carpetas (avatar, uploads, cache):</strong> créalas dentro de <code>/storage/</code> y asígnales permisos <strong>755</strong> (o <strong>775</strong>).</p>
+						                <p><strong>Archivo config.inc.php:</strong> duplica el archivo <code>install/example.php</code> y renombralo como <code>config.inc.php</code> en la raíz del sitio con permisos <strong>644</strong> (o <strong>664</strong>).</p>
+						                <p><strong>Carpeta raíz:</strong> asegúrate de que tenga permisos de escritura (<strong>755</strong> o <strong>775</strong>) para que el instalador pueda crear el archivo <code>install.lock</code> al finalizar.</p>
+						            </div>
+						        </div>
+						    </div>
+						<?php endif; ?>
 						<?php foreach($permisos ?? [] as $nombre => $permiso): ?>
 							<div class="form-group">
 								<div class="label"><?= strtoupper($nombre) ?></div>
