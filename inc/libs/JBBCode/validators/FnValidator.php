@@ -2,7 +2,7 @@
 
 namespace JBBCode\validators;
 
-require_once dirname(__DIR__, 1) . '/InputValidator.php';
+use JBBCode\InputValidator;
 
 /**
  * An InputValidator that allows for shortcut implementation
@@ -11,7 +11,7 @@ require_once dirname(__DIR__, 1) . '/InputValidator.php';
  * @author Kubo2
  * @since Feb 2020
  */
-class FnValidator implements \JBBCode\InputValidator
+class FnValidator implements InputValidator
 {
 	/**
 	 * @var callable

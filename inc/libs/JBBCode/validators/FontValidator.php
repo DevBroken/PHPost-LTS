@@ -2,7 +2,7 @@
 
 namespace JBBCode\validators;
 
-require_once dirname(__DIR__, 1) . '/InputValidator.php';
+use JBBCode\InputValidator;
 
 /**
  * Validador de fuentes para evitar malformaciones en la pagina
@@ -11,7 +11,7 @@ require_once dirname(__DIR__, 1) . '/InputValidator.php';
  * @since Sep 2016
  */
 
-class FontValidator implements \JBBCode\InputValidator {
+class FontValidator implements InputValidator {
 
     /**
      * Retorna true si $input es alfabético

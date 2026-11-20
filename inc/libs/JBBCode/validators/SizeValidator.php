@@ -2,7 +2,7 @@
 
 namespace JBBCode\validators;
 
-require_once dirname(__DIR__, 1) . '/InputValidator.php';
+use JBBCode\InputValidator;
 
 /**
  * Un InputValidator para valores de tamaño de texto válidos
@@ -11,7 +11,7 @@ require_once dirname(__DIR__, 1) . '/InputValidator.php';
  * @since Jul 2015
  * @update Miguel92 - 2026
  */
-class SizeValidator implements \JBBCode\InputValidator {
+class SizeValidator implements InputValidator {
 
     /**
      * Validates numeric size values > 0

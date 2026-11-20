@@ -2,26 +2,33 @@
 
 namespace JBBCode\visitors;
 
+use JBBCode\{
+    DocumentElement,
+    ElementNode,
+    NodeVisitor,
+    TextNode
+};
+
 /**
  * This visitor escapes html content of all strings and attributes
  *
  * @author Alexander Polyanskikh
  */
-class HTMLSafeVisitor implements \JBBCode\NodeVisitor
+class HTMLSafeVisitor implements NodeVisitor
 {
-    public function visitDocumentElement(\JBBCode\DocumentElement $documentElement): void
+    public function visitDocumentElement(DocumentElement $documentElement): void
     {
         foreach ($documentElement->getChildren() as $child) {
             $child->accept($this);
         }
     }
 
-    public function visitTextNode(\JBBCode\TextNode $textNode): void
+    public function visitTextNode(TextNode $textNode): void
     {
         $textNode->setValue($this->htmlSafe($textNode->getValue()));
     }
 
-    public function visitElementNode(\JBBCode\ElementNode $elementNode): void
+    public function visitElementNode(ElementNode $elementNode): void
     {
         $attrs = $elementNode->getAttribute();
         if (is_array($attrs) && !empty($attrs)) {

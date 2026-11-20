@@ -2,7 +2,7 @@
 
 namespace JBBCode\validators;
 
-require_once dirname(__DIR__, 1) . '/InputValidator.php';
+use JBBCode\InputValidator;
 
 /**
  * Un InputValidator para valores de alineación de texto válidos
@@ -10,7 +10,7 @@ require_once dirname(__DIR__, 1) . '/InputValidator.php';
  * @author Kmario19
  * @since Jul 2015
  */
-class AlignValidator implements \JBBCode\InputValidator {
+class AlignValidator implements InputValidator {
 
     /**
      * Retorna true si $input es un valor válido de alineacion

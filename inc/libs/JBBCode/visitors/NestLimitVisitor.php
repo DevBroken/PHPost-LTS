@@ -2,11 +2,12 @@
 
 namespace JBBCode\visitors;
 
-require_once dirname(__DIR__, 1) . '/CodeDefinition.php';
-require_once dirname(__DIR__, 1) . '/DocumentElement.php';
-require_once dirname(__DIR__, 1) . '/ElementNode.php';
-require_once dirname(__DIR__, 1) . '/NodeVisitor.php';
-require_once dirname(__DIR__, 1) . '/TextNode.php';
+use JBBCode\{
+    DocumentElement,
+    ElementNode,
+    NodeVisitor,
+    TextNode
+};
 
 /**
  * This visitor is used by the jBBCode core to enforce nest limits after
@@ -16,25 +17,25 @@ require_once dirname(__DIR__, 1) . '/TextNode.php';
  * @author jbowens
  * @since May 2013
  */
-class NestLimitVisitor implements \JBBCode\NodeVisitor
+class NestLimitVisitor implements NodeVisitor
 {
 
     /** @var integer[] A map from tag name to current depth. */
     protected array $depth = [];
 
-    public function visitDocumentElement(\JBBCode\DocumentElement $documentElement): void
+    public function visitDocumentElement(DocumentElement $documentElement): void
     {
         foreach ($documentElement->getChildren() as $child) {
             $child->accept($this);
         }
     }
 
-    public function visitTextNode(\JBBCode\TextNode $textNode): void
+    public function visitTextNode(TextNode $textNode): void
     {
         /* Nothing to do. Text nodes don't have tag names or children. */
     }
 
-    public function visitElementNode(\JBBCode\ElementNode $elementNode): void
+    public function visitElementNode(ElementNode $elementNode): void
     {
         $tagName = strtolower($elementNode->getTagName());
 

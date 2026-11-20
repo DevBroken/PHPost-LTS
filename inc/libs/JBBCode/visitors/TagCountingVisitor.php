@@ -2,6 +2,13 @@
 
 namespace JBBCode\visitors;
 
+use JBBCode\{
+    DocumentElement,
+    ElementNode,
+    NodeVisitor,
+    TextNode
+};
+
 /**
  * This visitor traverses parse graph, counting the number of times each
  * tag name occurs.
@@ -9,23 +16,23 @@ namespace JBBCode\visitors;
  * @author jbowens
  * @since January 2013
  */
-class TagCountingVisitor implements \JBBcode\NodeVisitor
+class TagCountingVisitor implements NodeVisitor
 {
     protected array $frequencies = [];
 
-    public function visitDocumentElement(\JBBCode\DocumentElement $documentElement): void
+    public function visitDocumentElement(DocumentElement $documentElement): void
     {
         foreach ($documentElement->getChildren() as $child) {
             $child->accept($this);
         }
     }
 
-    public function visitTextNode(\JBBCode\TextNode $textNode): void
+    public function visitTextNode(TextNode $textNode): void
     {
         // Nothing to do here, text nodes do not have tag names or children
     }
 
-    public function visitElementNode(\JBBCode\ElementNode $elementNode): void
+    public function visitElementNode(ElementNode $elementNode): void
     {
         $tagName = strtolower($elementNode->getTagName());
 

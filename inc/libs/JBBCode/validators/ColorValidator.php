@@ -2,7 +2,7 @@
 
 namespace JBBCode\validators;
 
-require_once dirname(__DIR__, 1) . '/InputValidator.php';
+use JBBCode\InputValidator;
 
 /**
  * An InputValidator for CSS color values. This is a very rudimentary
@@ -13,7 +13,7 @@ require_once dirname(__DIR__, 1) . '/InputValidator.php';
  * @author jbowens
  * @since May 2013
  */
-class ColorValidator implements \JBBCode\InputValidator {
+class ColorValidator implements InputValidator {
 
     /**
      * Returns true if $input uses only valid CSS color value

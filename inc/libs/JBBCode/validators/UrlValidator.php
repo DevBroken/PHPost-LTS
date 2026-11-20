@@ -2,7 +2,7 @@
 
 namespace JBBCode\validators;
 
-require_once dirname(__DIR__, 1) . '/InputValidator.php';
+use JBBCode\InputValidator;
 
 /**
  * An InputValidator for urls. This can be used to make [url] bbcodes secure.
@@ -10,7 +10,7 @@ require_once dirname(__DIR__, 1) . '/InputValidator.php';
  * @author jbowens
  * @since May 2013
  */
-class UrlValidator implements \JBBCode\InputValidator
+class UrlValidator implements InputValidator
 {
 
     /**

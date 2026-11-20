@@ -2,7 +2,7 @@
 
 namespace JBBCode\validators;
 
-require_once dirname(__DIR__, 1) . '/InputValidator.php';
+use JBBCode\InputValidator;
 
 /**
  * Un InputValidator para url de imagen válida
@@ -10,7 +10,7 @@ require_once dirname(__DIR__, 1) . '/InputValidator.php';
  * @author PHPost
  * @since Nov 2015
  */
-class ImgValidator implements \JBBCode\InputValidator {
+class ImgValidator implements InputValidator {
 
 	/**
 	 * Retorna true si $input es un enlace que muestra una imagen con los formatos más utilizados
